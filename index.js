@@ -1,9 +1,11 @@
 'use strict';
 const Hapi = require('hapi');
-const inert = require('inert');
+const Inert = require('inert');
 const server = new Hapi.Server();
 const Good = require('good');
 const blipp = require('blipp');
+const Path = require('path');
+const Vision = require('vision');
 
 server.connection({port:3000, host:'localhost'});
 
@@ -23,7 +25,7 @@ server.route({
 
 
 
-server.register([inert, blipp, {
+server.register([Inert, blipp, {
         register: Good,
         options: {
             reporters: {
@@ -39,13 +41,33 @@ server.register([inert, blipp, {
                 },'stdout']
             }
         }
-}], (err) => {
+}, Vision], (err) => {
     if (err) { throw err; }
+    
+    server.views({
+        engines: {
+            html: {
+                module: require('handlebars')
+            }
+        },
+        relativeTo: __dirname,
+        path: 'templates'
+    });
+    
     server.route({
         method: 'GET',
         path: '/hello',
         handler: function(request, reply) {
             reply.file('./public/hello.html');
+        }
+    });
+    
+    server.route({
+        method: 'GET',
+        path: '/index',
+        handler: function(request, reply) {
+            let context = { title :'Hapi Templates!' };
+            reply.view('index', context);
         }
     });
     server.start((err) => {
