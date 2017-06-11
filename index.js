@@ -1,4 +1,11 @@
 'use strict';       
+
+const Server = require('./lib');
+Server((err,server) => {
+                           if (err) { throw err };
+                           console.log('server is running at ' + server.info.uri);
+                       });
+/*
 const Hapi = require('hapi');
 const Inert = require('inert');  
 const server = new Hapi.Server(); 
@@ -18,11 +25,6 @@ const dbOpts = {
     },
     decorate: true
 };
-/*server.register(Hello,
-                  { 
-                    routes: {prefix:'/internal'}
-                  }
-        );*/
 server.register(
     [   Inert, blipp, 
         {
@@ -89,10 +91,11 @@ server.register(
                         }
                     });
                     server.start((err) => {
-                            server.plugins['UserStore'].db = server.mongo.db;
-                            server.plugins['UserStore'].ObjectID = server.mongo.ObjectID;
+                            //server.plugins['UserStore'].db = server.mongo.db;
+                            //server.plugins['UserStore'].ObjectID = server.mongo.ObjectID;
                            
                             if (err) { throw err };
                             console.log('server is running at ' + server.info.uri);
                             });
                  })
+*/

@@ -1,21 +1,27 @@
 'use strict';
 const Boom = require('boom');
 
+const internals = {
+    db: {},
+    ObjectID: {}
+};
+
 exports.register = function(server, options, next) {
     
     
-    server.dependency('hapi-mongodb', (server, next) => {
+    server.dependency('hapi-mongodb', (_server, next) => {
                                              server.log(['user-store', 'info'], 'user-store obtained db connection ');
-                                         //    db = server.mongo.db;
-    
-            //console.log(server.plugins['hapi-mongodb']);
-                                             //ObjectID = server.mongo.ObjectID;        
+                                             internals.db = _server.mongo.db;
+                                             internals.ObjectID = _server.mongo.ObjectID;        
+                                             //console.log(server.mongo);
                                              next();
                                          });
-    const getUser = function(userId,callback) {
+    internals.getUser = function(userId,callback) {
         
-        const users = server.plugins['UserStore'].db.collection('users');
-        const ObjectID = server.plugins['UserStore'].ObjectID;
+        /*const users = server.plugins['UserStore'].db.collection('users');
+        const ObjectID = server.plugins['UserStore'].ObjectID;*/
+        const users = internals.db.collection('users');
+        const ObjectID = internals.ObjectID;
         users.findOne({ _id: new ObjectID(userId)}, 
                                            (err,result) => {
                                                             if (err) {
@@ -25,10 +31,10 @@ exports.register = function(server, options, next) {
                                                         });
     };
     
-    const deleteUser = function(userId,callback) {
+    internals.deleteUser = function(userId,callback) {
         
-        const users = server.plugins['UserStore'].db.collection('users');
-        const ObjectID = server.plugins['UserStore'].ObjectID;
+        const users = internals.db.collection('users');
+        const ObjectID = internals.ObjectID;
         users.findOneAndDelete({ _id: new ObjectID(userId)}, 
                                            (err,result) => {
                                                             if (err) {
@@ -38,24 +44,25 @@ exports.register = function(server, options, next) {
                                                         });
     };
     
-    const createUser = function(userDetail,callback) {
+    internals.createUser = function(userDetail,callback) {
         /*console.log(server.plugins['greeting']);*/
         
-        const users = server.plugins['UserStore'].db.collection('users');
-        
+        const users = internals.db.collection('users');
+                
         users.insertOne(userDetail, function(err, result) {
                         if (err) {
                             callback(Boom.internal('Internal MongoDB error', err));
                         }   
-                        callback(null, result);
+                        //console.log(result.insertedId);
+                        callback(null, result.insertedId);
                     });
     }
     
-    const updateUser = function(userDetail,callback) {
+    internals.updateUser = function(userDetail,callback) {
         
-        const users = server.plugins['UserStore'].db.collection('users');
-        const ObjectID = server.plugins['UserStore'].ObjectID;
-        console.log(userDetail);
+        const users = internals.db.collection('users');
+        const ObjectID = internals.ObjectID;
+        //console.log(userDetail);
         users.findOneAndUpdate({ _id: new ObjectID(userDetail.id)},
                                { 
                                    firstname: userDetail.firstname,
@@ -79,7 +86,7 @@ exports.register = function(server, options, next) {
             path: '/user/{userId}',
             config: {
                 handler: function(request, reply) {
-                        getUser(request.params.userId, (err,user) => {
+                        internals.getUser(request.params.userId, (err,user) => {
                                                             if (err) { reply(Boom.notFound(err)); }
                                                             reply(null, user);
                                                         })
@@ -94,7 +101,7 @@ exports.register = function(server, options, next) {
                 handler: function(request, reply) {
                            //  return reply('deleted '  + request.params.userId);
                     
-                             deleteUser(request.params.userId, (err,user) => {
+                             internals.deleteUser(request.params.userId, (err,user) => {
                                                             if (err) { reply(Boom.notFound(err)); }
                                                             reply(null, user);
                                                         })
@@ -108,14 +115,14 @@ exports.register = function(server, options, next) {
             config: {
                          handler: function(request, reply) 
                                   {
-                                      //const userDetails = request.payload;
-                                      const userDetails = {
+                                      const userDetails = request.payload;
+                                      /*const userDetails = {
                                                             firstname:'Tuan', 
                                                             lastname: 'Phan', 
                                                             occupation: 'Software engineer'
-                                                          };
+                                                          };*/
                                       //server.plugins['UserStore'].db = request.mongo.db;
-                                      createUser(userDetails, (err,user) => 
+                                      internals.createUser(userDetails, (err,user) => 
                                                               {
                                                                   if(err) {
                                                                        return reply(Boom.badRequest(err));
@@ -140,7 +147,7 @@ exports.register = function(server, options, next) {
                                                             occupation: 'Software engineer'
                                                           };*/
                                       //server.plugins['UserStore'].db = request.mongo.db;
-                                      updateUser(userDetails, (err,user) => 
+                                      internals.updateUser(userDetails, (err,user) => 
                                                               {
                                                                   if(err) {
                                                                        return reply(Boom.badRequest(err));
@@ -153,13 +160,16 @@ exports.register = function(server, options, next) {
         }
     ]);
     server.expose({
-                    getUser: getUser,
-                    createUser: createUser,
-                    db: {},
-                    ObjectID: {}
+                    getUser: internals.getUser,
+                    createUser: internals.createUser,
+                    deleteUser: internals.deleteUser,
+                    updateUser: internals.updateUser
                  });
     return next();
 }
+
+exports._internals = internals;
+
 exports.register.attributes = {
     name: 'UserStore'
 };
