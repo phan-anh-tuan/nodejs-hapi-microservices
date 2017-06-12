@@ -9,7 +9,7 @@ const describe = lab.experiment;
 const afterEach = lab.afterEach;
 const expect = Code.expect;
 
-describe('Root Document', () =>{
+describe('/', () =>{
     it('It will return Hello World', (done) => {
                         Server((err, server) => {
                             if (err) { done(err);}

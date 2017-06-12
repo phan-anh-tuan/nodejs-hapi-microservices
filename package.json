@@ -4,7 +4,7 @@
   "description": "building backend api using hapi",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/lab/bin/lab ./test/index.js",
+    "test": "node_modules/lab/bin/lab ./test --verbose --coverage",
     "devstart": "nodemon index.js"
   },
   "repository": {
