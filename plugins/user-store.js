@@ -1,5 +1,6 @@
 'use strict';
 const Boom = require('boom');
+const Joi = require('joi');
 
 const internals = {
     db: {},
@@ -85,19 +86,34 @@ exports.register = function(server, options, next) {
             method: 'GET',
             path: '/user/{userId}',
             config: {
+                 validate: {
+                            headers: true,
+                            params: {
+                                userId: Joi.string().min(4).max(40).required(),
+                            },
+                            query: false
+                        },
                 handler: function(request, reply) {
                         internals.getUser(request.params.userId, (err,user) => {
                                                             if (err) { reply(Boom.notFound(err)); }
                                                             reply(null, user);
                                                         })
                      },
-                description: 'Retrieve a user'
+                description: 'Retrieve a user',
+                tags: ['api']
             }
         },
         {
             method: 'DELETE',
             path: '/user/{userId}',
             config: {
+                 validate: {
+                            headers: true,
+                            params: {
+                                userId: Joi.string().min(4).max(40).required(),
+                            },
+                            query: false
+                        },
                 handler: function(request, reply) {
                            //  return reply('deleted '  + request.params.userId);
                     
@@ -106,13 +122,23 @@ exports.register = function(server, options, next) {
                                                             reply(null, user);
                                                         })
                          },
-                description: 'Delete a user'
+                description: 'Delete a user',
+                tags: ['api']
             }
         },        
         {
             method: 'POST',
             path: '/user',
             config: {
+                        validate: {
+                            headers: true,
+                            payload: {
+                                firstname: Joi.string().min(4).max(40).required(),
+                                lastname: Joi.string().min(4).max(40).required(),
+                                occupation: Joi.string().min(4).max(40).required()
+                            },
+                            query: false
+                        },
                          handler: function(request, reply) 
                                   {
                                       const userDetails = request.payload;
@@ -130,7 +156,8 @@ exports.register = function(server, options, next) {
                                                                   return reply(user);
                                                               })
                                   },
-                         description: 'Create a user'                    
+                         description: 'Create a user' ,
+                         tags: ['api']
                     }
         },
         {
