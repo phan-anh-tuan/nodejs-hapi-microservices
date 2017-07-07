@@ -4,7 +4,8 @@ const Server = require('./lib');
 Server((err,server) => {
                            if (err) { throw err };
                            console.log('server is running at ' + server.info.uri);
-                       });
+                       }); 
+                       //adding some comment to make the file dirty
 /*
 const Hapi = require('hapi');
 const Inert = require('inert');  
