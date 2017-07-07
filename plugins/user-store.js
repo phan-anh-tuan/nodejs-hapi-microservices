@@ -1,6 +1,17 @@
 'use strict';
+/**
+ * boom provides a set of utilities for returning HTTP errors. 
+ * https://www.npmjs.com/package/boom
+ */
 const Boom = require('boom');
+/**
+ * This is joi, joi allows you to create blueprints or 
+ * schemas for JavaScript objects (an object that stores information) 
+ * to ensure validation of key information.
+ * https://www.npmjs.com/package/joi
+ */
 const Joi = require('joi');
+
 
 const internals = {
     db: {},
