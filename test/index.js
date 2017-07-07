@@ -8,7 +8,7 @@ const it = lab.test;
 const describe = lab.experiment;
 const afterEach = lab.afterEach;
 const expect = Code.expect;
-
+/*
 describe('/', () =>{
     it('It will return Hello World', (done) => {
                         Server((err, server) => {
@@ -20,4 +20,4 @@ describe('/', () =>{
                         });
                     });
     });
-});
+});*/
