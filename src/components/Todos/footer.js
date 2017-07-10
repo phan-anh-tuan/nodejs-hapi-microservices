@@ -1,5 +1,5 @@
 import React from 'react'
-import FilterLink from '../containers/filterLink'
+import FilterLink from '../../containers/Todos/filterLink'
 /*
 const Footer = () => (
   <p>
@@ -22,19 +22,19 @@ const Footer = () => (
 export default Footer
 */
 
-const Footer = () => (
+const Footer = (props) => (
   <p>
     Show:
     {' '}
-    <FilterLink filter="SHOW_ALL">
+    <FilterLink href={props.href} filter="SHOW_ALL">
       All
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_ACTIVE">
+    <FilterLink href={props.href} filter="SHOW_ACTIVE">
       Active
     </FilterLink>
     {', '}
-    <FilterLink filter="SHOW_COMPLETED">
+    <FilterLink href={props.href} filter="SHOW_COMPLETED">
       Completed
     </FilterLink>
   </p>

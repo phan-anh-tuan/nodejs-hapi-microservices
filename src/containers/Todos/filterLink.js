@@ -31,9 +31,9 @@ export default FilterLink
 
 import React from 'react'
 import { Link } from 'react-router-dom'
-const FilterLink = ({ filter, children }) => (
+const FilterLink = ({ filter, children, href }) => (
   <Link
-    to={filter === 'SHOW_ALL' ? '/' : `/${filter}`}
+    to={filter === 'SHOW_ALL' ? `${href}` : `${href}/${filter}`}
     style={{
       textDecoration: 'none',
       color: 'black'

@@ -39,7 +39,7 @@ export function fetchTodos() {
                     }
     return (dispatch) => {
         dispatch(RequestTodos());
-        return fetch('http://localhost:3000/data.json')
+        return fetch('http://localhost:3000/assets/data.json')
                     .then( response => response.text())
                     .then( text => {    
                                         let json = JSON.parse(text);

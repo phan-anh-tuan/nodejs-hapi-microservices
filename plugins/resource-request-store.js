@@ -90,13 +90,13 @@ exports.register = function(server, options, next) {
         
         requests.findOneAndUpdate({ _id: new ObjectID(requestDetail.id)},
                                { 
-                                   account_name: requestDetail.accountName,
-                                   resource_type: requestDetail.resourceType,
-                                   resource_rate: requestDetail.resourceRate,
+                                   accountName: requestDetail.accountName,
+                                   resourceType: requestDetail.resourceType,
+                                   resourceRate: requestDetail.resourceRate,
                                    quantity: requestDetail.quantity,
-                                   submission_date: requestDetail.submissionDate,
-                                   tentative_start_date: requestDetail.tentativeStartDate,
-                                   fulilment_date: requestDetail.fulfilmentDate,
+                                   submissionDate: requestDetail.submissionDate,
+                                   tentativeStartDate: requestDetail.tentativeStartDate,
+                                   fulfilmentDate: requestDetail.fulfilmentDate,
                                    status: requestDetail.status
                                    //comments will be persisted in xxx collection
                                }, 
