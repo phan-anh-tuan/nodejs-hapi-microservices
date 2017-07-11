@@ -16,6 +16,7 @@ const getVisibleTodos = (todos, filter) => {
 }
 
 const mapStateToProps = (state,ownProps) => {
+  console.log(`visibleTodoList: mapStateToProps`);
   return {
     isFetchingTodos: state.isFetchingTodos,
     todos: getVisibleTodos(state.todos, ownProps.filter)

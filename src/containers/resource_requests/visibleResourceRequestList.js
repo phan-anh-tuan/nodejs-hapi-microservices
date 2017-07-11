@@ -11,6 +11,13 @@ class VisibleResourceRequestList extends React.Component {
 
   componentWillMount() {
       this.props.fetchResourceRequests();
+      this.requestHandler = setInterval(this.props.fetchResourceRequests,5000); //attempt to refresh data every 5 seconds
+  }
+
+  componentWillUnmount() {
+    if (this.requestHandler) {
+        clearInterval(this.requestHandler);
+    }
   }
 
   render() {

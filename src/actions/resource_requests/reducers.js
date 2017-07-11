@@ -8,8 +8,10 @@ export function resourceRequests(state= {   isFetching: false,
             return Object.assign({},state,{ isFetching: true });
         case RECEIVE_RESOURCE_REQUESTS:
             return Object.assign({},state,
-                                { isFetching: false,
-                                  items: action.items});
+                                {   isFetching: false,
+                                    items: action.items,
+                                    updatedAt: Date.now()
+                                });
         case REQUEST_RESOURCE_REQUEST:
             return Object.assign({},state,
                                 { activeRequest: { isFetching: true,

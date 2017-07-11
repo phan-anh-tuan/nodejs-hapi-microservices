@@ -32,7 +32,8 @@ const initialState = {
       activeRequest: {
           isFetching: false,
           data: {}
-      }
+      },
+      updatedAt: Date.now()
     }
 }
 
