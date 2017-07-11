@@ -88,7 +88,7 @@ exports.register = function(server, options, next) {
         const requests = internals.db.collection('resource_requests');
         const ObjectID = internals.ObjectID;
         
-        requests.findOneAndUpdate({ _id: new ObjectID(requestDetail.id)},
+        requests.findOneAndUpdate({ _id: new ObjectID(requestDetail._id)},
                                { 
                                    accountName: requestDetail.accountName,
                                    resourceType: requestDetail.resourceType,
@@ -187,9 +187,9 @@ exports.register = function(server, options, next) {
                         resourceType: Joi.string().required(),
                         resourceRate: Joi.number().required(),
                         quantity: Joi.number().required(),
-                        submissionDate: Joi.date(),
-                        tentativeStartDate: Joi.date(),
-                        fulfilmentDate: Joi.date(),
+                        submissionDate: Joi.date().optional(),
+                        tentativeStartDate: Joi.date().optional(),
+                        fulfilmentDate: Joi.date().optional(),
                         status: Joi.string().required()
                     },
                     query: false
@@ -216,7 +216,7 @@ exports.register = function(server, options, next) {
                 validate: {
                     headers: true,
                     payload: {
-                        id: Joi.string().required(),
+                        _id: Joi.string().required(),
                         accountName: Joi.string().required(),
                         resourceType: Joi.string().required(),
                         resourceRate: Joi.number().required(),
@@ -240,7 +240,8 @@ exports.register = function(server, options, next) {
                                                         return reply(r_request);
                                                     })
                         },
-                description: 'Update a resource request'                    
+                description: 'Update a resource request',
+                tags: ['api']
             }
         }
     ]);

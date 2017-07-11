@@ -16158,13 +16158,15 @@ module.exports = self.fetch.bind(self);
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.RESET_ACTIVE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUESTS = exports.REQUEST_RESOURCE_REQUESTS = undefined;
+exports.RESET_ACTIVE_RESOURCE_REQUEST = exports.CHANGE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUESTS = exports.REQUEST_RESOURCE_REQUESTS = undefined;
 exports.RequestResourceRequests = RequestResourceRequests;
 exports.RequestResourceRequest = RequestResourceRequest;
 exports.fetchResourceRequests = fetchResourceRequests;
 exports.fetchResourceRequest = fetchResourceRequest;
+exports.handleRequestSubmit = handleRequestSubmit;
 exports.ReceiveResourceRequests = ReceiveResourceRequests;
 exports.ReceiveResourceRequest = ReceiveResourceRequest;
+exports.handleRequestChange = handleRequestChange;
 
 var _isomorphicFetch = __webpack_require__(194);
 
@@ -16178,6 +16180,7 @@ var REQUEST_RESOURCE_REQUESTS = exports.REQUEST_RESOURCE_REQUESTS = 'REQUEST_RES
 var RECEIVE_RESOURCE_REQUESTS = exports.RECEIVE_RESOURCE_REQUESTS = 'RECEIVE_RESOURCE_REQUESTS';
 var REQUEST_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = 'REQUEST_RESOURCE_REQUEST';
 var RECEIVE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = 'RECEIVE_RESOURCE_REQUEST';
+var CHANGE_RESOURCE_REQUEST = exports.CHANGE_RESOURCE_REQUEST = 'CHANGE_RESOURCE_REQUEST';
 var RESET_ACTIVE_RESOURCE_REQUEST = exports.RESET_ACTIVE_RESOURCE_REQUEST = 'RESET_ACTIVE_RESOURCE_REQUEST';
 /**
  * Request a list resource requests
@@ -16198,14 +16201,14 @@ function RequestResourceRequest() {
     };
 }
 
-function shouldFetchRequest(state) {
-    if (moment().diff(moment(state.resourceRequests.updatedAt)) / 1000 > 10) {
+function shouldFetchRequests(state) {
+    if (moment().diff(moment(state.resourceRequests.updatedAt)) / 1000 > 60) {
         return true;
-    } //refresh data every 10 second
-    return state.resourceRequests.items.length === 0;
+    } //refresh data every 60 second
+    return state.resourceRequests.items.length === 0 && !state.resourceRequests.isFetching;
 }
 
-function fetchRequest(dispatch) {
+function fetchRequests(dispatch) {
     console.log('resource_requests/actions.js fetching Resource Request');
     dispatch(RequestResourceRequests());
     return (0, _isomorphicFetch2.default)('http://localhost:3000/api/resource/request');
@@ -16214,6 +16217,8 @@ function fetchRequest(dispatch) {
  * Fetch a list resource requests
  */
 function fetchResourceRequests() {
+    var forced = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
     var options = {
         method: 'GET',
         headers: {
@@ -16222,8 +16227,9 @@ function fetchResourceRequests() {
     };
     return function (dispatch, getState) {
         console.log('attempt to refresh resource requests');
-        if (shouldFetchRequest(getState())) {
-            return fetchRequest(dispatch).then(function (response) {
+        var state = getState();
+        if (forced && !state.resourceRequests.isFetching || shouldFetchRequests(state)) {
+            return fetchRequests(dispatch).then(function (response) {
                 return response.json();
             }).then(function (json) {
                 dispatch(ReceiveResourceRequests(json));
@@ -16247,14 +16253,24 @@ function fetchResourceRequest(id) {
             }
         };
         return function (dispatch, getState) {
-            if (shouldFetchRequest(getState())) {
-                return fetchRequest(dispatch).then(function (response) {
+            var state = getState();
+            if (shouldFetchRequests(state)) {
+                return fetchRequests(dispatch).then(function (response) {
                     return response.json();
                 }).then(function (json) {
-                    dispatch(ReceiveResourceRequests(json));
+                    return dispatch(ReceiveResourceRequests(json));
+                }).then(function (nextState) {
+                    //console.log(`resource_requests/actions nextState ${JSON.stringify(nextState)}`);
+                    var datas = nextState.items.filter(function (request) {
+                        return request._id === id;
+                    });
+                    dispatch(ReceiveResourceRequest(datas.length > 0 ? datas[0] : {}));
                 });
             } else {
-                // Let the calling code know there's nothing to wait for.
+                var datas = state.resourceRequests.items.filter(function (request) {
+                    return request._id === id;
+                });
+                dispatch(ReceiveResourceRequest(datas.length > 0 ? datas[0] : {}));
                 return Promise.resolve();
             }
             /*
@@ -16273,7 +16289,50 @@ function fetchResourceRequest(id) {
         };
     }
 }
+function handleRequestSubmit() {
+    return function (dispatch, getState) {
+        var state = getState();
+        var requestBody = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
 
+        if (!requestBody.submissionDate) {
+            delete requestBody.submissionDate;
+        }
+        if (!requestBody.tentativeStartDate) {
+            delete requestBody.tentativeStartDate;
+        }
+        if (!requestBody.fulfilmentDate) {
+            delete requestBody.fulfilmentDate;
+        }
+        if (!requestBody.status) {
+            requestBody.status = 'Open';
+        }
+
+        //console.log('resource_requests/action prepare to submit data', requestBody);
+        return (0, _isomorphicFetch2.default)('http://localhost:3000/api/resource/request', {
+            method: !!requestBody._id ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        }).then(function (response) {
+            throw new Error('simulate error scenario');
+            /*if (response.status !== 200) {
+                let error = new Error(response.statusText);
+                error.response = response;
+                throw error;
+            } else {
+                
+                return response.json();
+            }*/
+        }).then(function (json) {
+            console.log('request succeeded with JSON response', json);
+            return dispatch(fetchResourceRequests(true));
+        });
+        /*.catch( (error) => {
+            console.log('request fail with error message', error.message);
+        })*/
+    };
+}
 /**
  * Receive a list of resource requests
  **/
@@ -16292,6 +16351,16 @@ function ReceiveResourceRequest(item) {
     return {
         type: RECEIVE_RESOURCE_REQUEST,
         data: item
+    };
+}
+
+function handleRequestChange(event) {
+    var target = event.target;
+    console.log('resource_requestsaction ' + target.id + ' ' + target.value);
+    return {
+        type: CHANGE_RESOURCE_REQUEST,
+        name: target.id,
+        value: target.type === 'checkbox' ? target.checked : target.value
     };
 }
 
@@ -58434,9 +58503,14 @@ module.exports = function kindOf(val) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 exports.resourceRequests = resourceRequests;
 
 var _actions = __webpack_require__(195);
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 function resourceRequests() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { isFetching: false,
@@ -58464,6 +58538,17 @@ function resourceRequests() {
             return Object.assign({}, state, { activeRequest: { isFetching: false,
                     data: {} }
             });
+        case _actions.CHANGE_RESOURCE_REQUEST:
+            /************************************************************************************************
+            * see warning for Deep Clone
+            *    https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+            *************************************************************************************************/
+            var _JSON$parse = JSON.parse(JSON.stringify(state.activeRequest)),
+                data = _JSON$parse.data,
+                rest = _objectWithoutProperties(_JSON$parse, ['data']);
+
+            data[action.name] = action.value;
+            return Object.assign({}, state, { activeRequest: _extends({ data: data }, rest) });
         default:
             return state;
     }
@@ -59091,7 +59176,7 @@ var VisibleResourceRequestList = function (_React$Component) {
         key: 'componentWillMount',
         value: function componentWillMount() {
             this.props.fetchResourceRequests();
-            this.requestHandler = setInterval(this.props.fetchResourceRequests, 5000); //attempt to refresh data every 5 seconds
+            this.requestHandler = setInterval(this.props.fetchResourceRequests, 60000); //attempt to refresh data every 60 seconds
         }
     }, {
         key: 'componentWillUnmount',
@@ -72306,14 +72391,12 @@ var _actions = __webpack_require__(195);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var mapStateToProps = function mapStateToProps(state, ownProps) {
-  var datas = state.resourceRequests.items.filter(function (request) {
-    return request._id === ownProps.match.params.id;
-  });
+  //const datas =  state.resourceRequests.items.filter((request) => { return request._id === ownProps.match.params.id;})
   return {
     id: ownProps.match.params.id,
     isFetching: state.resourceRequests.activeRequest.isFetching,
-    //data: state.resourceRequests.activeRequest.data
-    data: datas.length > 0 ? datas[0] : {}
+    data: state.resourceRequests.activeRequest.data
+    //data: datas.length >0 ? datas[0]: {}
   };
 };
 
@@ -72321,7 +72404,13 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
   return {
     fetchResourceRequest: function fetchResourceRequest(id) {
       dispatch((0, _actions.fetchResourceRequest)(id));
-    }
+    },
+    handleChange: function handleChange(event) {
+      dispatch((0, _actions.handleRequestChange)(event));
+    },
+    handleSubmit: function handleSubmit() {
+      return dispatch((0, _actions.handleRequestSubmit)());
+    } /***** how exceptions was handled, should data be populated in mapStateToProps ???***/
   };
 };
 
@@ -72399,10 +72488,14 @@ var FieldGroup = function FieldGroup(_ref) {
 var ResourceRequestForm = function (_React$Component) {
     _inherits(ResourceRequestForm, _React$Component);
 
-    function ResourceRequestForm() {
+    function ResourceRequestForm(props) {
         _classCallCheck(this, ResourceRequestForm);
 
-        return _possibleConstructorReturn(this, (ResourceRequestForm.__proto__ || Object.getPrototypeOf(ResourceRequestForm)).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, (ResourceRequestForm.__proto__ || Object.getPrototypeOf(ResourceRequestForm)).call(this, props));
+
+        _this.handleChange = _this.handleChange.bind(_this);
+        _this.handleSubmit = _this.handleSubmit.bind(_this);
+        return _this;
     }
 
     _createClass(ResourceRequestForm, [{
@@ -72432,6 +72525,24 @@ var ResourceRequestForm = function (_React$Component) {
             return true;
         }
     }, {
+        key: 'handleChange',
+        value: function handleChange(event) {
+            this.props.handleChange(event);
+        }
+    }, {
+        key: 'handleSubmit',
+        value: function handleSubmit(e) {
+            var _this2 = this;
+
+            this.props.handleSubmit().then(function () {
+                console.log('request_form handleSubmit succeed');
+                _this2.props.history.push('/resource/request');
+            }).catch(function (error) {
+                console.log('request_form handleSubmit fail with error message', error.message);
+            });
+            e.preventDefault();
+        }
+    }, {
         key: 'render',
         value: function render() {
             //console.log(`request_form: render ${JSON.stringify(this.props)}`);
@@ -72449,16 +72560,16 @@ var ResourceRequestForm = function (_React$Component) {
             return _react2.default.createElement(
                 _reactBootstrap.Form,
                 { horizontal: true },
-                _react2.default.createElement(FieldGroup, { id: 'accountName', label: 'Account Name:', type: 'text', placeholder: 'Account Name', value: !!accountName ? accountName : '' }),
-                _react2.default.createElement(FieldGroup, { id: 'resourceType', label: 'Resource Type:', type: 'text', placeholder: 'Resource Type', value: !!resourceType ? resourceType : '' }),
-                _react2.default.createElement(FieldGroup, { id: 'resourceRate', label: 'Resource Rate:', type: 'text', placeholder: 'Resource Rate', value: !!resourceRate ? resourceRate : 0 }),
-                _react2.default.createElement(FieldGroup, { id: 'quantity', label: 'Resource Quantity:', type: 'text', placeholder: 'Resource Quantity', value: !!quantity ? quantity : 0 }),
-                _react2.default.createElement(FieldGroup, { id: 'submissionDate', label: 'Submission Date:', type: 'date', placeholder: 'Submission Date', value: !!submissionDate ? moment(submissionDate).format("YYYY-MM-DD") : '' }),
-                _react2.default.createElement(FieldGroup, { id: 'tentativeStartDate', label: 'Start Date:', type: 'date', placeholder: 'Tentative Start Date', value: !!tentativeStartDate ? moment(tentativeStartDate).format("YYYY-MM-DD") : '' }),
-                _react2.default.createElement(FieldGroup, { id: 'fulfilmentDate', label: 'Fulfilment Date:', type: 'date', placeholder: 'Fulfilment Date', value: !!fulfilmentDate ? moment(fulfilmentDate).format("YYYY-MM-DD") : '' }),
+                _react2.default.createElement(FieldGroup, { id: 'accountName', label: 'Account Name:', type: 'text', placeholder: 'Account Name', onChange: this.handleChange, value: !!accountName ? accountName : '' }),
+                _react2.default.createElement(FieldGroup, { id: 'resourceType', label: 'Resource Type:', type: 'text', placeholder: 'Resource Type', onChange: this.handleChange, value: !!resourceType ? resourceType : '' }),
+                _react2.default.createElement(FieldGroup, { id: 'resourceRate', label: 'Resource Rate:', type: 'text', placeholder: 'Resource Rate', onChange: this.handleChange, value: !!resourceRate ? resourceRate : 0 }),
+                _react2.default.createElement(FieldGroup, { id: 'quantity', label: 'Resource Quantity:', type: 'text', placeholder: 'Resource Quantity', onChange: this.handleChange, value: !!quantity ? quantity : 0 }),
+                _react2.default.createElement(FieldGroup, { id: 'submissionDate', label: 'Submission Date:', type: 'date', placeholder: 'Submission Date', onChange: this.handleChange, value: !!submissionDate ? moment(submissionDate).format("YYYY-MM-DD") : '' }),
+                _react2.default.createElement(FieldGroup, { id: 'tentativeStartDate', label: 'Start Date:', type: 'date', placeholder: 'Tentative Start Date', onChange: this.handleChange, value: !!tentativeStartDate ? moment(tentativeStartDate).format("YYYY-MM-DD") : '' }),
+                _react2.default.createElement(FieldGroup, { id: 'fulfilmentDate', label: 'Fulfilment Date:', type: 'date', placeholder: 'Fulfilment Date', onChange: this.handleChange, value: !!fulfilmentDate ? moment(fulfilmentDate).format("YYYY-MM-DD") : '' }),
                 _react2.default.createElement(
                     FieldGroup,
-                    { id: 'fulfilmentDate', label: 'Fulfilment Date:', componentClass: 'select', placeholder: 'Fulfilment Date', value: !!status ? status : 'Open' },
+                    { id: 'status', label: 'Status:', componentClass: 'select', placeholder: 'Status', onChange: this.handleChange, value: !!status ? status : 'Open' },
                     _react2.default.createElement(
                         'option',
                         { value: 'Open' },
@@ -72478,7 +72589,7 @@ var ResourceRequestForm = function (_React$Component) {
                         { xsPush: 1, xs: 11, smOffset: 2, sm: 6 },
                         _react2.default.createElement(
                             _reactBootstrap.Button,
-                            { type: 'submit' },
+                            { type: 'submit', onClick: this.handleSubmit },
                             button
                         )
                     )
@@ -72494,7 +72605,9 @@ ResourceRequestForm.propTypes = {
     id: _propTypes2.default.string,
     data: _propTypes2.default.object.isRequired,
     isFetching: _propTypes2.default.bool.isRequired,
-    fetchResourceRequest: _propTypes2.default.func.isRequired
+    fetchResourceRequest: _propTypes2.default.func.isRequired,
+    handleChange: _propTypes2.default.func.isRequired,
+    handleSubmit: _propTypes2.default.func.isRequired
 };
 
 exports.default = ResourceRequestForm;
