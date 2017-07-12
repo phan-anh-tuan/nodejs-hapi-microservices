@@ -1,6 +1,7 @@
-import React from 'react';
-import { Panel, ListGroup, ListGroupItem, Button } from 'react-bootstrap';
+import React from 'react'
+import { Panel, ListGroup, ListGroupItem, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+
 var moment = require('moment');
 /**
 accountName: requestDetail.accountName,

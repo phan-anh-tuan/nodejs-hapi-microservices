@@ -1,7 +1,8 @@
 import React from 'react';;
 import {Grid, Row, Col } from 'react-bootstrap';
 import Request from './request.js';
-
+import { LightboxModal, LightboxTrigger, Lightbox } from '../react-lightbox.js'
+import { Button } from 'react-bootstrap'
 
 const RequestList = (props) => {
     const { items: r_requests, isFetching } = props;
@@ -19,6 +20,21 @@ const RequestList = (props) => {
         <Grid style={gridStyle}>
             {isFetching && <Row className='show-grid'><Col sm={12}><h2>Loading.....</h2></Col></Row>}
             {rows}
+            <Row className='show-grid'>
+                <Col sm={12}>
+                    <Lightbox>
+                        <LightboxTrigger>
+                            <Button>Show Comments</Button>
+                        </LightboxTrigger>
+                        <LightboxModal>
+                            <div>
+                                <h1>This is the basic usage!</h1>
+                                <p>Good luck :D</p>
+                            </div>
+                        </LightboxModal>
+                    </Lightbox>   
+                </Col>
+            </Row>
         </Grid>
     )
 }

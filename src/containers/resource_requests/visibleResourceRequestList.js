@@ -40,14 +40,16 @@ function getVisibleRequests(requests, status) {
 const mapStateToProps = (state,ownProps) => {
   return {
     isFetching: state.resourceRequests.isFetching,
-    items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All')
+    items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
+    showCommentDialog: state.resourceRequests.isFetching
   }
 }
 
 
 const mapDispatchToProps = (dispatch) => {
   return {
-      fetchResourceRequests: () => { dispatch(fetchResourceRequests()) }
+      fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
+      showComment: () => { alert('comment here');}
   }
 }
 

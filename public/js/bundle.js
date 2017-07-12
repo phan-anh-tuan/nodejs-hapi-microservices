@@ -16315,15 +16315,14 @@ function handleRequestSubmit() {
             },
             body: JSON.stringify(requestBody)
         }).then(function (response) {
-            throw new Error('simulate error scenario');
-            /*if (response.status !== 200) {
-                let error = new Error(response.statusText);
+            if (response.status !== 200) {
+                var error = new Error(response.statusText);
                 error.response = response;
                 throw error;
             } else {
-                
+
                 return response.json();
-            }*/
+            }
         }).then(function (json) {
             console.log('request succeeded with JSON response', json);
             return dispatch(fetchResourceRequests(true));
@@ -56074,7 +56073,7 @@ var _visibleResourceRequestList = __webpack_require__(787);
 
 var _visibleResourceRequestList2 = _interopRequireDefault(_visibleResourceRequestList);
 
-var _request_form_container = __webpack_require__(951);
+var _request_form_container = __webpack_require__(952);
 
 var _request_form_container2 = _interopRequireDefault(_request_form_container);
 
@@ -56082,7 +56081,7 @@ var _reactDom = __webpack_require__(32);
 
 var _reactRouterDom = __webpack_require__(222);
 
-var _app = __webpack_require__(953);
+var _app = __webpack_require__(954);
 
 var _app2 = _interopRequireDefault(_app);
 
@@ -59218,7 +59217,8 @@ function getVisibleRequests(requests, status) {
 var mapStateToProps = function mapStateToProps(state, ownProps) {
     return {
         isFetching: state.resourceRequests.isFetching,
-        items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All')
+        items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
+        showCommentDialog: state.resourceRequests.isFetching
     };
 };
 
@@ -59226,6 +59226,9 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
     return {
         fetchResourceRequests: function fetchResourceRequests() {
             dispatch((0, _actions.fetchResourceRequests)());
+        },
+        showComment: function showComment() {
+            alert('comment here');
         }
     };
 };
@@ -59258,6 +59261,8 @@ var _reactBootstrap = __webpack_require__(196);
 var _request = __webpack_require__(925);
 
 var _request2 = _interopRequireDefault(_request);
+
+var _reactLightbox = __webpack_require__(951);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -59306,7 +59311,46 @@ var RequestList = function RequestList(props) {
                 )
             )
         ),
-        rows
+        rows,
+        _react2.default.createElement(
+            _reactBootstrap.Row,
+            { className: 'show-grid' },
+            _react2.default.createElement(
+                _reactBootstrap.Col,
+                { sm: 12 },
+                _react2.default.createElement(
+                    _reactLightbox.Lightbox,
+                    null,
+                    _react2.default.createElement(
+                        _reactLightbox.LightboxTrigger,
+                        null,
+                        _react2.default.createElement(
+                            _reactBootstrap.Button,
+                            null,
+                            'Show Comments'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        _reactLightbox.LightboxModal,
+                        null,
+                        _react2.default.createElement(
+                            'div',
+                            null,
+                            _react2.default.createElement(
+                                'h1',
+                                null,
+                                'This is the basic usage!'
+                            ),
+                            _react2.default.createElement(
+                                'p',
+                                null,
+                                'Good luck :D'
+                            )
+                        )
+                    )
+                )
+            )
+        )
     );
 };
 
@@ -72373,6 +72417,250 @@ NavLink.defaultProps = {
 
 
 Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.Lightbox = exports.LightboxTrigger = exports.LightboxModal = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+// CSS from http://stackoverflow.com/questions/19064987/html-css-popup-div-on-text-click
+// and http://stackoverflow.com/questions/10019797/pure-css-close-button
+// source code from https://github.com/howtomakeaturn/React-Lightbox/blob/master/react-lightbox.jsx
+
+var LightboxModal = exports.LightboxModal = function (_React$Component) {
+    _inherits(LightboxModal, _React$Component);
+
+    function LightboxModal(props) {
+        _classCallCheck(this, LightboxModal);
+
+        var _this = _possibleConstructorReturn(this, (LightboxModal.__proto__ || Object.getPrototypeOf(LightboxModal)).call(this, props));
+        //super(Object.assign({},props,{ whiteContentStyles: whiteContentStyles,blackOverlayStyles: blackOverlayStyles, closeTagStyles: closeTagStyles}));
+
+
+        _this.whiteContentStyles = {
+            position: 'fixed',
+            top: '25%',
+            left: '30%',
+            right: '30%',
+            backgroundColor: '#fff',
+            color: '#7F7F7F',
+            padding: '20px',
+            border: '2px solid #ccc',
+            borderRadius: '20px',
+            boxShadow: '0 1px 5px #333',
+            zIndex: '101'
+        };
+        _this.blackOverlayStyles = {
+            background: 'black',
+            opacity: '.5',
+            position: 'fixed',
+            top: '0px',
+            bottom: '0px',
+            left: '0px',
+            right: '0px',
+            zIndex: '100'
+        };
+        _this.closeTagStyles = {
+            float: 'right',
+            marginTop: '-30px',
+            marginRight: '-30px',
+            cursor: 'pointer',
+            color: '#fff',
+            border: '1px solid #AEAEAE',
+            borderRadius: '30px',
+            background: '#605F61',
+            fontSize: '31px',
+            fontWeight: 'bold',
+            display: 'inline-block',
+            lineHeight: '0px',
+            padding: '11px 3px',
+            textDecoration: 'none'
+        };
+
+        return _this;
+    }
+
+    _createClass(LightboxModal, [{
+        key: 'componentDidMount',
+        value: function componentDidMount() {
+            document.addEventListener("keydown", function (e) {
+                if (this.props.display && e.keyCode === 27) {
+                    this.props.closeLightbox();
+                }
+            }.bind(this));
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+
+            var _lightboxModal = this;
+
+            var _lightboxModal$props = _lightboxModal.props,
+                children = _lightboxModal$props.children,
+                rest = _objectWithoutProperties(_lightboxModal$props, ['children']);
+
+            var childrenWithProps = _react2.default.Children.map(_lightboxModal.props.children, function (child) {
+                var childWithProps = _react2.default.cloneElement(child, _extends({}, rest));
+                return childWithProps;
+            });
+
+            if (this.props.display) {
+                return _react2.default.createElement(
+                    'div',
+                    null,
+                    _react2.default.createElement('div', { style: Object.assign({}, this.blackOverlayStyles, !!this.props.blackOverlayStyles ? this.props.blackOverlayStyles : {}), onClick: this.props.closeLightbox }),
+                    _react2.default.createElement(
+                        'div',
+                        { style: Object.assign({}, this.whiteContentStyles, !!this.props.whiteContentStyles ? this.props.whiteContentStyles : {}) },
+                        _react2.default.createElement(
+                            'a',
+                            { style: Object.assign({}, this.closeTagStyles, !!this.props.closeTagStyles ? this.props.closeTagStyles : {}), onClick: this.props.closeLightbox },
+                            '\xD7'
+                        ),
+                        childrenWithProps
+                    )
+                );
+            } else {
+                return _react2.default.createElement('div', null);
+            }
+        }
+    }]);
+
+    return LightboxModal;
+}(_react2.default.Component);
+
+var LightboxTrigger = exports.LightboxTrigger = function (_React$Component2) {
+    _inherits(LightboxTrigger, _React$Component2);
+
+    function LightboxTrigger() {
+        _classCallCheck(this, LightboxTrigger);
+
+        return _possibleConstructorReturn(this, (LightboxTrigger.__proto__ || Object.getPrototypeOf(LightboxTrigger)).apply(this, arguments));
+    }
+
+    _createClass(LightboxTrigger, [{
+        key: 'render',
+        value: function render() {
+            var _lightboxTrigger = this;
+
+            var _lightboxTrigger$prop = _lightboxTrigger.props,
+                children = _lightboxTrigger$prop.children,
+                rest = _objectWithoutProperties(_lightboxTrigger$prop, ['children']);
+
+            var childrenWithProps = _react2.default.Children.map(_lightboxTrigger.props.children, function (child) {
+                console.log('react-lightbox.js traversing through LightboxTrigger children with props ' + JSON.stringify(_extends({}, rest)));
+                var childWithProps = _react2.default.cloneElement(child, _extends({ onClick: _lightboxTrigger.props.openLightbox }, rest));
+                return childWithProps;
+            });
+
+            /*
+            this.props.children.props.onClick = this.props.openLightbox;
+            for (var j in this.props){
+                if (j !== 'children'){
+                    this.props.children.props[j] = this.props[j];
+                }
+            }*/
+            console.log('react-lightbox.js traversing through LightboxTrigger result', childrenWithProps);
+            return childrenWithProps[0];
+        }
+    }]);
+
+    return LightboxTrigger;
+}(_react2.default.Component);
+
+var Lightbox = exports.Lightbox = function (_React$Component3) {
+    _inherits(Lightbox, _React$Component3);
+
+    function Lightbox(props) {
+        _classCallCheck(this, Lightbox);
+
+        var _this3 = _possibleConstructorReturn(this, (Lightbox.__proto__ || Object.getPrototypeOf(Lightbox)).call(this, props));
+
+        _this3.openLightbox = _this3.openLightbox.bind(_this3);
+        _this3.closeLightbox = _this3.closeLightbox.bind(_this3);
+        _this3.setLightboxState = _this3.setLightboxState.bind(_this3);
+        _this3.state = { display: false };
+        return _this3;
+    }
+
+    _createClass(Lightbox, [{
+        key: 'componentWillMount',
+        value: function componentWillMount() {
+            if (this.props.data) this.setState(this.props.data);
+        }
+    }, {
+        key: 'openLightbox',
+        value: function openLightbox() {
+            this.setState({ display: true });
+        }
+    }, {
+        key: 'closeLightbox',
+        value: function closeLightbox() {
+            this.setState({ display: false });
+        }
+    }, {
+        key: 'setLightboxState',
+        value: function setLightboxState(obj) {
+            this.setState(obj);
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            console.log('react-lightbox.js Lightbox children ' + _react2.default.Children);
+            var _lightbox = this;
+            var i = 0;
+            var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
+
+                i++;
+                var childProps = {
+                    openLightbox: _lightbox.openLightbox,
+                    closeLightbox: _lightbox.closeLightbox,
+                    setLightboxState: _lightbox.setLightboxState,
+                    key: i
+                };
+                console.log('react-lightbox.js LIGHTBOX.STATE', _lightbox.state);
+                for (var j in _lightbox.state) {
+                    childProps[j] = _lightbox.state[j];
+                }
+                var childWithProps = _react2.default.cloneElement(child, childProps);
+                return childWithProps;
+            });
+
+            return _react2.default.createElement(
+                'div',
+                null,
+                childrenWithProps
+            );
+        }
+    }]);
+
+    return Lightbox;
+}(_react2.default.Component);
+
+/***/ }),
+/* 952 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -72382,7 +72670,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(92);
 
-var _request_form = __webpack_require__(952);
+var _request_form = __webpack_require__(953);
 
 var _request_form2 = _interopRequireDefault(_request_form);
 
@@ -72419,7 +72707,7 @@ var RequestFormContainer = (0, _reactRedux.connect)(mapStateToProps, mapDispatch
 exports.default = RequestFormContainer;
 
 /***/ }),
-/* 952 */
+/* 953 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72613,7 +72901,7 @@ ResourceRequestForm.propTypes = {
 exports.default = ResourceRequestForm;
 
 /***/ }),
-/* 953 */
+/* 954 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72627,15 +72915,15 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _footer = __webpack_require__(954);
+var _footer = __webpack_require__(955);
 
 var _footer2 = _interopRequireDefault(_footer);
 
-var _addTodo = __webpack_require__(956);
+var _addTodo = __webpack_require__(957);
 
 var _addTodo2 = _interopRequireDefault(_addTodo);
 
-var _visibleTodoList = __webpack_require__(957);
+var _visibleTodoList = __webpack_require__(958);
 
 var _visibleTodoList2 = _interopRequireDefault(_visibleTodoList);
 
@@ -72657,7 +72945,7 @@ var App = function App(_ref) {
 exports.default = App;
 
 /***/ }),
-/* 954 */
+/* 955 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72671,7 +72959,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _filterLink = __webpack_require__(955);
+var _filterLink = __webpack_require__(956);
 
 var _filterLink2 = _interopRequireDefault(_filterLink);
 
@@ -72728,7 +73016,7 @@ var Footer = function Footer(props) {
 exports.default = Footer;
 
 /***/ }),
-/* 955 */
+/* 956 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72796,7 +73084,7 @@ var FilterLink = function FilterLink(_ref) {
 exports.default = FilterLink;
 
 /***/ }),
-/* 956 */
+/* 957 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72854,7 +73142,7 @@ AddTodo = (0, _reactRedux.connect)()(AddTodo);
 exports.default = AddTodo;
 
 /***/ }),
-/* 957 */
+/* 958 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72868,7 +73156,7 @@ var _reactRedux = __webpack_require__(92);
 
 var _actions = __webpack_require__(463);
 
-var _todoList = __webpack_require__(958);
+var _todoList = __webpack_require__(959);
 
 var _todoList2 = _interopRequireDefault(_todoList);
 
@@ -72915,7 +73203,7 @@ var VisibleTodoList = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToPro
 exports.default = VisibleTodoList;
 
 /***/ }),
-/* 958 */
+/* 959 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -72937,7 +73225,7 @@ var _propTypes = __webpack_require__(4);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _todo = __webpack_require__(959);
+var _todo = __webpack_require__(960);
 
 var _todo2 = _interopRequireDefault(_todo);
 
@@ -73018,7 +73306,7 @@ TodoList.propTypes = {
 exports.default = TodoList;
 
 /***/ }),
-/* 959 */
+/* 960 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
