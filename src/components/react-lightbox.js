@@ -6,7 +6,6 @@ import React from 'react'
 
 export class LightboxModal extends React.Component{
     constructor(props) {
-       //super(Object.assign({},props,{ whiteContentStyles: whiteContentStyles,blackOverlayStyles: blackOverlayStyles, closeTagStyles: closeTagStyles}));
         super(props);
         this.whiteContentStyles = {
                                             position: 'fixed',
@@ -94,19 +93,10 @@ export class LightboxTrigger extends React.Component{
         const _lightboxTrigger = this;
         const {children, ...rest} = _lightboxTrigger.props;
         const childrenWithProps = React.Children.map(_lightboxTrigger.props.children,(child) => {
-            console.log(`react-lightbox.js traversing through LightboxTrigger children with props ${JSON.stringify({...rest})}`);
             const childWithProps = React.cloneElement(child, { onClick: _lightboxTrigger.props.openLightbox, ...rest})
             return childWithProps;
         });
     
-        /*
-        this.props.children.props.onClick = this.props.openLightbox;
-        for (var j in this.props){
-            if (j !== 'children'){
-                this.props.children.props[j] = this.props[j];
-            }
-        }*/
-        console.log(`react-lightbox.js traversing through LightboxTrigger result`, childrenWithProps);
         return childrenWithProps[0];
     }
 }
@@ -140,7 +130,6 @@ export class Lightbox extends React.Component {
     }
 
     render(){
-        console.log(`react-lightbox.js Lightbox children ${React.Children}`)
         const _lightbox = this;
         let i = 0;
         const childrenWithProps = React.Children.map(this.props.children,(child) => {
@@ -152,7 +141,6 @@ export class Lightbox extends React.Component {
                 setLightboxState: _lightbox.setLightboxState,
                 key: i
             };
-            console.log(`react-lightbox.js LIGHTBOX.STATE`,_lightbox.state);
             for (var j in _lightbox.state){
                 childProps[j] = _lightbox.state[j];
             }
