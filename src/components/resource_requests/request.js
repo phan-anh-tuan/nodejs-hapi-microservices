@@ -31,6 +31,15 @@ const Request = (props) => {
         <Link to={`${baseUrl}/${_id}`}>
             <Button>View</Button>
         </Link>
+        {" "}
+        <a onClick={() => props.handleShowComment(_id)}>
+            <Button>Show Comment</Button>
+        </a>
+        {" "}
+        <Link to={`${baseUrl}/${_id}`}>
+            <Button>Delele</Button>
+        </Link>
+        {" "}
     </Panel>);
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, FormGroup, FormControl, Col, ControlLabel, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Col, ControlLabel, Button, HelpBlock } from 'react-bootstrap';
 import PropTypes from 'prop-types'
 var moment = require('moment');
 
@@ -69,6 +69,17 @@ class ResourceRequestForm extends React.Component {
         const button = this.props.id !== 'create'? 'Update' : 'Create New';
         return (
             <Form horizontal>
+                { 
+                    this.props.isSubmitting && 
+                    <FormGroup>
+                        <Col componentClass={ControlLabel} xsPush={1} xs={11} sm={2}>
+                            {" "}
+                        </Col>
+                        <Col xsPush={1} xs={11} sm={6}>
+                            <HelpBlock>{"Saving"}</HelpBlock>
+                        </Col>
+                    </FormGroup>
+                }
                 <FieldGroup id="accountName" label="Account Name:" type="text" placeholder="Account Name" onChange={this.handleChange} value={!!accountName ? accountName: ''}/>
                 
                 <FieldGroup id="resourceType" label="Resource Type:" type="text" placeholder="Resource Type" onChange={this.handleChange} value={!!resourceType ? resourceType: ''}/>
@@ -103,6 +114,7 @@ ResourceRequestForm.propTypes = {
     id: PropTypes.string,
     data: PropTypes.object.isRequired,
     isFetching: PropTypes.bool.isRequired,
+    isSubmitting: PropTypes.bool.isRequired,
     fetchResourceRequest: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func.isRequired

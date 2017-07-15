@@ -9,6 +9,7 @@ const mapStateToProps = (state,ownProps) => {
   return {
     id: ownProps.match.params.id,
     isFetching: state.resourceRequests.activeRequest.isFetching,
+    isSubmitting: state.resourceRequests.activeRequest.isSubmitting,
     data: state.resourceRequests.activeRequest.data
     //data: datas.length >0 ? datas[0]: {}
   }

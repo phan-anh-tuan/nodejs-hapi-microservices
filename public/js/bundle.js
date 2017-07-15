@@ -16158,7 +16158,7 @@ module.exports = self.fetch.bind(self);
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.RESET_ACTIVE_RESOURCE_REQUEST = exports.CHANGE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUESTS = exports.REQUEST_RESOURCE_REQUESTS = undefined;
+exports.ADD_COMMENT_SUCCESSFULLY = exports.RECEIVE_REQUEST_SUBMISSION = exports.SUBMIT_RESOURCE_REQUEST = exports.HIDE_REQUEST_COMMENT = exports.SHOW_REQUEST_COMMENT = exports.RESET_ACTIVE_RESOURCE_REQUEST = exports.CHANGE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUESTS = exports.REQUEST_RESOURCE_REQUESTS = undefined;
 exports.RequestResourceRequests = RequestResourceRequests;
 exports.RequestResourceRequest = RequestResourceRequest;
 exports.fetchResourceRequests = fetchResourceRequests;
@@ -16167,6 +16167,12 @@ exports.handleRequestSubmit = handleRequestSubmit;
 exports.ReceiveResourceRequests = ReceiveResourceRequests;
 exports.ReceiveResourceRequest = ReceiveResourceRequest;
 exports.handleRequestChange = handleRequestChange;
+exports.showRequestComment = showRequestComment;
+exports.hideRequestComment = hideRequestComment;
+exports.addRequestComment = addRequestComment;
+exports.addRequestCommentSuccessfully = addRequestCommentSuccessfully;
+exports.submitResourceRequest = submitResourceRequest;
+exports.receiveRequestSubmission = receiveRequestSubmission;
 
 var _isomorphicFetch = __webpack_require__(194);
 
@@ -16182,6 +16188,11 @@ var REQUEST_RESOURCE_REQUEST = exports.REQUEST_RESOURCE_REQUEST = 'REQUEST_RESOU
 var RECEIVE_RESOURCE_REQUEST = exports.RECEIVE_RESOURCE_REQUEST = 'RECEIVE_RESOURCE_REQUEST';
 var CHANGE_RESOURCE_REQUEST = exports.CHANGE_RESOURCE_REQUEST = 'CHANGE_RESOURCE_REQUEST';
 var RESET_ACTIVE_RESOURCE_REQUEST = exports.RESET_ACTIVE_RESOURCE_REQUEST = 'RESET_ACTIVE_RESOURCE_REQUEST';
+var SHOW_REQUEST_COMMENT = exports.SHOW_REQUEST_COMMENT = 'SHOW_REQUEST_COMMENT';
+var HIDE_REQUEST_COMMENT = exports.HIDE_REQUEST_COMMENT = 'HIDE_REQUEST_COMMENT';
+var SUBMIT_RESOURCE_REQUEST = exports.SUBMIT_RESOURCE_REQUEST = 'SUBMIT_RESOURCE_REQUEST';
+var RECEIVE_REQUEST_SUBMISSION = exports.RECEIVE_REQUEST_SUBMISSION = 'RECEIVE_REQUEST_SUBMISSION';
+var ADD_COMMENT_SUCCESSFULLY = exports.ADD_COMMENT_SUCCESSFULLY = 'ADD_COMMENT_SUCCESSFULLY';
 /**
  * Request a list resource requests
  */
@@ -16190,7 +16201,6 @@ function RequestResourceRequests() {
         type: REQUEST_RESOURCE_REQUESTS
     };
 }
-
 /**
  * Request a specific resource request
  */
@@ -16261,16 +16271,14 @@ function fetchResourceRequest(id) {
                     return dispatch(ReceiveResourceRequests(json));
                 }).then(function (nextState) {
                     //console.log(`resource_requests/actions nextState ${JSON.stringify(nextState)}`);
-                    var datas = nextState.items.filter(function (request) {
-                        return request._id === id;
-                    });
-                    dispatch(ReceiveResourceRequest(datas.length > 0 ? datas[0] : {}));
+                    //const datas =  nextState.items.filter((request) => { return request._id === id })
+                    //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                    dispatch(ReceiveResourceRequest(id));
                 });
             } else {
-                var datas = state.resourceRequests.items.filter(function (request) {
-                    return request._id === id;
-                });
-                dispatch(ReceiveResourceRequest(datas.length > 0 ? datas[0] : {}));
+                //const datas =  state.resourceRequests.items.filter((request) => { return request._id === id;})
+                //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                dispatch(ReceiveResourceRequest(id));
                 return Promise.resolve();
             }
             /*
@@ -16306,7 +16314,7 @@ function handleRequestSubmit() {
         if (!requestBody.status) {
             requestBody.status = 'Open';
         }
-
+        dispatch(submitResourceRequest());
         //console.log('resource_requests/action prepare to submit data', requestBody);
         return (0, _isomorphicFetch2.default)('http://localhost:3000/api/resource/request', {
             method: !!requestBody._id ? 'PUT' : 'POST',
@@ -16316,20 +16324,22 @@ function handleRequestSubmit() {
             body: JSON.stringify(requestBody)
         }).then(function (response) {
             if (response.status !== 200) {
-                var error = new Error(response.statusText);
-                error.response = response;
-                throw error;
+                var _error2 = new Error(response.statusText);
+                _error2.response = response;
+                dispatch(receiveRequestSubmission(_error2));
+                //throw error;
             } else {
 
                 return response.json();
             }
         }).then(function (json) {
             console.log('request succeeded with JSON response', json);
+            dispatch(receiveRequestSubmission());
             return dispatch(fetchResourceRequests(true));
-        });
-        /*.catch( (error) => {
+        }).catch(function (_error) {
             console.log('request fail with error message', error.message);
-        })*/
+            dispatch(receiveRequestSubmission(_error));
+        });
     };
 }
 /**
@@ -16345,21 +16355,90 @@ function ReceiveResourceRequests(items) {
 /**
  * Receive a specific resource request
  **/
-function ReceiveResourceRequest(item) {
-    console.log('resource_requests/actions.js receive request ' + JSON.stringify(item));
+function ReceiveResourceRequest(id) {
+    //console.log(`resource_requests/actions.js receive request ${JSON.stringify(id)}`);
     return {
         type: RECEIVE_RESOURCE_REQUEST,
-        data: item
+        id: id
     };
 }
 
 function handleRequestChange(event) {
     var target = event.target;
-    console.log('resource_requestsaction ' + target.id + ' ' + target.value);
+    //console.log(`resource_requests\action ${target.id} ${target.value}`);
     return {
         type: CHANGE_RESOURCE_REQUEST,
         name: target.id,
         value: target.type === 'checkbox' ? target.checked : target.value
+    };
+}
+
+function showRequestComment(id) {
+    return {
+        type: SHOW_REQUEST_COMMENT,
+        id: id
+    };
+}
+
+function hideRequestComment(id) {
+    return {
+        type: HIDE_REQUEST_COMMENT,
+        id: id
+    };
+}
+
+function addRequestComment(text) {
+    return function (dispatch, getState) {
+        //TODO: show loading 
+        var state = getState();
+        var activeRequest = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
+        var payload = Object.assign({}, { _id: activeRequest._id, text: text });
+        console.log('resource_requestsaction about to lodge a request ' + JSON.stringify(payload));
+        return (0, _isomorphicFetch2.default)('http://localhost:3000/api/resource/request/comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then(function (response) {
+            if (response.status !== 200) {
+                var _error3 = new Error(response.statusText);
+                _error3.response = response;
+                dispatch(addRequestCommentSuccessfully(_error3));
+                //throw error;
+            } else {
+                return response.json();
+            }
+        }).then(function (json) {
+            return dispatch(addRequestCommentSuccessfully());
+        }).catch(function (_error) {
+            console.log('request fail with error message', error.message);
+            dispatch(addRequestCommentSuccessfully(error));
+        });
+    };
+}
+
+function addRequestCommentSuccessfully() {
+    var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+    return {
+        type: ADD_COMMENT_SUCCESSFULLY,
+        error: error
+    };
+}
+
+function submitResourceRequest() {
+    return {
+        type: SUBMIT_RESOURCE_REQUEST
+    };
+}
+
+function receiveRequestSubmission() {
+    var _error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+    return {
+        type: RECEIVE_REQUEST_SUBMISSION,
+        error: _error
     };
 }
 
@@ -57429,6 +57508,8 @@ var initialState = {
         items: [],
         activeRequest: {
             isFetching: false,
+            isSubmitting: false,
+            showComment: false,
             data: {}
         },
         updatedAt: Date.now()
@@ -58511,10 +58592,36 @@ var _actions = __webpack_require__(195);
 
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
+function populateActiveRequest(state, id) {
+    var isFetching = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+    var isSubmitting = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    var showComment = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+
+    var datas = void 0;
+    if (id) {
+        datas = state.items.filter(function (request) {
+            return request._id === id;
+        });
+    } else {
+        datas = [];
+    }
+    return Object.assign({}, state, { activeRequest: { isFetching: isFetching,
+            isSubmitting: isSubmitting,
+            showComment: showComment,
+            data: datas.length > 0 ? datas[0] : {} }
+    });
+}
+
 function resourceRequests() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { isFetching: false,
+
         items: [],
-        activeRequest: { isFetching: false, data: {} } };
+        activeRequest: { isFetching: false,
+            isSubmitting: false,
+            showComment: false,
+            data: {}
+        }
+    };
     var action = arguments[1];
 
     switch (action.type) {
@@ -58526,13 +58633,41 @@ function resourceRequests() {
                 updatedAt: Date.now()
             });
         case _actions.REQUEST_RESOURCE_REQUEST:
-            return Object.assign({}, state, { activeRequest: { isFetching: true,
-                    data: {} }
-            });
+            return populateActiveRequest(state, null, true, false, false);
+        /*return Object.assign({},state,
+                            { activeRequest: { isFetching: true,
+                                               isSubmitting: false,
+                                               showComment: false,
+                                               data: {}}
+                            });*/
         case _actions.RECEIVE_RESOURCE_REQUEST:
-            return Object.assign({}, state, { activeRequest: { isFetching: false,
-                    data: action.data }
-            });
+
+            return populateActiveRequest(state, action.id, false, false, false);
+        /*return Object.assign({},state,
+                            { activeRequest: { isFetching: false,
+                                               data: action.data}
+                            });*/
+        case _actions.SHOW_REQUEST_COMMENT:
+            return populateActiveRequest(state, action.id, false, false, true);
+        case _actions.HIDE_REQUEST_COMMENT:
+            var _JSON$parse = JSON.parse(JSON.stringify(state.activeRequest)),
+                showComment = _JSON$parse.showComment,
+                __props = _objectWithoutProperties(_JSON$parse, ['showComment']);
+
+            return Object.assign({}, state, { activeRequest: _extends({ showComment: false }, __props) });
+        case _actions.SUBMIT_RESOURCE_REQUEST:
+            var _JSON$parse2 = JSON.parse(JSON.stringify(state.activeRequest)),
+                isSubmitting = _JSON$parse2.isSubmitting,
+                props = _objectWithoutProperties(_JSON$parse2, ['isSubmitting']);
+
+            return Object.assign({}, state, { activeRequest: _extends({ isSubmitting: true }, props) });
+        case _actions.RECEIVE_REQUEST_SUBMISSION:
+            //check action.error and handle error properly
+            var _JSON$parse3 = JSON.parse(JSON.stringify(state.activeRequest)),
+                _isSubmitting = _JSON$parse3._isSubmitting,
+                _props = _objectWithoutProperties(_JSON$parse3, ['_isSubmitting']);
+
+            return Object.assign({}, state, { activeRequest: _extends({ isSubmitting: false }, _props) });
         case _actions.RESET_ACTIVE_RESOURCE_REQUEST:
             return Object.assign({}, state, { activeRequest: { isFetching: false,
                     data: {} }
@@ -58542,12 +58677,16 @@ function resourceRequests() {
             * see warning for Deep Clone
             *    https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
             *************************************************************************************************/
-            var _JSON$parse = JSON.parse(JSON.stringify(state.activeRequest)),
-                data = _JSON$parse.data,
-                rest = _objectWithoutProperties(_JSON$parse, ['data']);
+            var _JSON$parse4 = JSON.parse(JSON.stringify(state.activeRequest)),
+                data = _JSON$parse4.data,
+                rest = _objectWithoutProperties(_JSON$parse4, ['data']);
 
             data[action.name] = action.value;
             return Object.assign({}, state, { activeRequest: _extends({ data: data }, rest) });
+        case _actions.ADD_COMMENT_SUCCESSFULLY:
+        /*
+        TODO handle exception if (action.error)
+        */
         default:
             return state;
     }
@@ -59136,6 +59275,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = __webpack_require__(0);
@@ -59191,8 +59332,9 @@ var VisibleResourceRequestList = function (_React$Component) {
                 isFetching = _props.isFetching,
                 items = _props.items,
                 match = _props.match;
+            //return (<RequestList items={items} isFetching={isFetching} baseUrl={match.url}/>);
 
-            return _react2.default.createElement(_request_list2.default, { items: items, isFetching: isFetching, baseUrl: match.url });
+            return _react2.default.createElement(_request_list2.default, _extends({ baseUrl: match.url }, this.props));
         }
     }]);
 
@@ -59215,10 +59357,12 @@ function getVisibleRequests(requests, status) {
 }
 
 var mapStateToProps = function mapStateToProps(state, ownProps) {
+    console.log('visibleResourceRequestList comments ' + state.resourceRequests.activeRequest.data.comments);
     return {
         isFetching: state.resourceRequests.isFetching,
         items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
-        showCommentDialog: state.resourceRequests.isFetching
+        showComment: state.resourceRequests.activeRequest.showComment,
+        comments: state.resourceRequests.activeRequest.data.comments
     };
 };
 
@@ -59227,8 +59371,15 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
         fetchResourceRequests: function fetchResourceRequests() {
             dispatch((0, _actions.fetchResourceRequests)());
         },
-        showComment: function showComment() {
-            alert('comment here');
+        handleShowComment: function handleShowComment(id) {
+            dispatch((0, _actions.showRequestComment)(id));
+        },
+        handleHideComment: function handleHideComment() {
+            dispatch((0, _actions.hideRequestComment)());
+        },
+        handleAddComment: function handleAddComment(text) {
+            alert('text ' + text);
+            dispatch((0, _actions.addRequestComment)(text));
         }
     };
 };
@@ -59236,7 +59387,11 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 VisibleResourceRequestList.propTypes = {
     items: _propTypes2.default.array.isRequired,
     isFetching: _propTypes2.default.bool.isRequired,
-    fetchResourceRequests: _propTypes2.default.func.isRequired
+    showComment: _propTypes2.default.bool.isRequired,
+    comments: _propTypes2.default.array,
+    fetchResourceRequests: _propTypes2.default.func.isRequired,
+    handleShowComment: _propTypes2.default.func.isRequired
+
 };
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(VisibleResourceRequestList);
@@ -59252,6 +59407,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
@@ -59266,93 +59423,146 @@ var _reactLightbox = __webpack_require__(951);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 ;
 
+var moment = __webpack_require__(1);
 
-var RequestList = function RequestList(props) {
-    var r_requests = props.items,
-        isFetching = props.isFetching;
+var RequestList = function (_React$Component) {
+    _inherits(RequestList, _React$Component);
 
-    var baseUrl = props.baseUrl;
-    var rows = [];
-    var gridStyle = { opacity: 1 };
-    r_requests.forEach(function (request, index) {
-        if (index % 3 === 0) {
-            rows.push(_react2.default.createElement(
-                _reactBootstrap.Row,
-                { key: index, className: 'show-grid' },
-                []
-            ));
-        }
-        rows[rows.length - 1].props.children.push(_react2.default.createElement(
-            _reactBootstrap.Col,
-            { sm: 12, md: 4, key: request._id },
-            _react2.default.createElement(_request2.default, { data: request, baseUrl: baseUrl })
-        ));
-    });
-    {
-        if (isFetching) {
-            gridStyle = { opacity: 0.5 };
-        }
+    function RequestList(props) {
+        _classCallCheck(this, RequestList);
+
+        var _this = _possibleConstructorReturn(this, (RequestList.__proto__ || Object.getPrototypeOf(RequestList)).call(this, props));
+
+        _this.handleSubmit = _this.handleSubmit.bind(_this);
+        _this.handleChange = _this.handleChange.bind(_this);
+        return _this;
     }
-    return _react2.default.createElement(
-        _reactBootstrap.Grid,
-        { style: gridStyle },
-        isFetching && _react2.default.createElement(
-            _reactBootstrap.Row,
-            { className: 'show-grid' },
-            _react2.default.createElement(
-                _reactBootstrap.Col,
-                { sm: 12 },
-                _react2.default.createElement(
-                    'h2',
-                    null,
-                    'Loading.....'
-                )
-            )
-        ),
-        rows,
-        _react2.default.createElement(
-            _reactBootstrap.Row,
-            { className: 'show-grid' },
-            _react2.default.createElement(
-                _reactBootstrap.Col,
-                { sm: 12 },
-                _react2.default.createElement(
-                    _reactLightbox.Lightbox,
-                    null,
+
+    _createClass(RequestList, [{
+        key: 'handleSubmit',
+        value: function handleSubmit(event) {
+            this.props.handleAddComment(this.state.text);
+            event.preventDefault();
+        }
+    }, {
+        key: 'handleChange',
+        value: function handleChange(event) {
+            //console.log(`request_list set component state to ${event.target.value}`);
+            this.state = { text: event.target.value };
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            var _props = this.props,
+                r_requests = _props.items,
+                isFetching = _props.isFetching,
+                comments = _props.comments;
+
+            var baseUrl = this.props.baseUrl;
+            var rows = [];
+            var gridStyle = { opacity: 1 };
+            r_requests.forEach(function (request, index) {
+                if (index % 3 === 0) {
+                    rows.push(_react2.default.createElement(
+                        _reactBootstrap.Row,
+                        { key: index, className: 'show-grid' },
+                        []
+                    ));
+                }
+                rows[rows.length - 1].props.children.push(_react2.default.createElement(
+                    _reactBootstrap.Col,
+                    { sm: 12, md: 4, key: request._id },
+                    _react2.default.createElement(_request2.default, { handleShowComment: _this2.props.handleShowComment, data: request, baseUrl: baseUrl })
+                ));
+            });
+
+            var _comments = [];
+            if (comments) {
+                comments.forEach(function (c, i) {
+                    _comments.push(_react2.default.createElement(
+                        'li',
+                        { key: i },
+                        c.text + ' - ' + moment(c.createdDate).format('MMMM Do YYYY')
+                    ));
+                });
+            }
+            {
+                if (isFetching) {
+                    gridStyle = { opacity: 0.5 };
+                }
+            }
+            return _react2.default.createElement(
+                _reactBootstrap.Grid,
+                { style: gridStyle },
+                isFetching && _react2.default.createElement(
+                    _reactBootstrap.Row,
+                    { className: 'show-grid' },
                     _react2.default.createElement(
-                        _reactLightbox.LightboxTrigger,
-                        null,
+                        _reactBootstrap.Col,
+                        { sm: 12 },
                         _react2.default.createElement(
-                            _reactBootstrap.Button,
+                            'h2',
                             null,
-                            'Show Comments'
+                            'Loading.....'
                         )
-                    ),
+                    )
+                ),
+                rows,
+                _react2.default.createElement(
+                    _reactBootstrap.Row,
+                    { className: 'show-grid' },
                     _react2.default.createElement(
-                        _reactLightbox.LightboxModal,
-                        null,
+                        _reactBootstrap.Col,
+                        { sm: 12 },
                         _react2.default.createElement(
-                            'div',
-                            null,
+                            _reactLightbox.LightboxModal,
+                            { display: this.props.showComment, closeLightbox: this.props.handleHideComment },
                             _react2.default.createElement(
-                                'h1',
+                                'ul',
                                 null,
-                                'This is the basic usage!'
+                                _comments.length > 0 ? _comments : 'There is no comments'
                             ),
                             _react2.default.createElement(
-                                'p',
-                                null,
-                                'Good luck :D'
+                                _reactBootstrap.Form,
+                                { onSubmit: this.handleSubmit },
+                                _react2.default.createElement(
+                                    _reactBootstrap.FormGroup,
+                                    null,
+                                    _react2.default.createElement(
+                                        _reactBootstrap.InputGroup,
+                                        null,
+                                        _react2.default.createElement(_reactBootstrap.FormControl, { type: 'text', onChange: this.handleChange }),
+                                        _react2.default.createElement(
+                                            _reactBootstrap.InputGroup.Button,
+                                            null,
+                                            _react2.default.createElement(
+                                                _reactBootstrap.Button,
+                                                { type: 'submit' },
+                                                'Add'
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         )
                     )
                 )
-            )
-        )
-    );
-};
+            );
+        }
+    }]);
+
+    return RequestList;
+}(_react2.default.Component);
 
 exports.default = RequestList;
 
@@ -70205,7 +70415,30 @@ var Request = function Request(props) {
                 null,
                 'View'
             )
-        )
+        ),
+        " ",
+        _react2.default.createElement(
+            'a',
+            { onClick: function onClick() {
+                    return props.handleShowComment(_id);
+                } },
+            _react2.default.createElement(
+                _reactBootstrap.Button,
+                null,
+                'Show Comment'
+            )
+        ),
+        " ",
+        _react2.default.createElement(
+            _reactRouterDom.Link,
+            { to: baseUrl + '/' + _id },
+            _react2.default.createElement(
+                _reactBootstrap.Button,
+                null,
+                'Delele'
+            )
+        ),
+        " "
     );
 };
 
@@ -72450,8 +72683,6 @@ var LightboxModal = exports.LightboxModal = function (_React$Component) {
         _classCallCheck(this, LightboxModal);
 
         var _this = _possibleConstructorReturn(this, (LightboxModal.__proto__ || Object.getPrototypeOf(LightboxModal)).call(this, props));
-        //super(Object.assign({},props,{ whiteContentStyles: whiteContentStyles,blackOverlayStyles: blackOverlayStyles, closeTagStyles: closeTagStyles}));
-
 
         _this.whiteContentStyles = {
             position: 'fixed',
@@ -72513,7 +72744,9 @@ var LightboxModal = exports.LightboxModal = function (_React$Component) {
 
             var _lightboxModal$props = _lightboxModal.props,
                 children = _lightboxModal$props.children,
-                rest = _objectWithoutProperties(_lightboxModal$props, ['children']);
+                display = _lightboxModal$props.display,
+                closeLightbox = _lightboxModal$props.closeLightbox,
+                rest = _objectWithoutProperties(_lightboxModal$props, ['children', 'display', 'closeLightbox']);
 
             var childrenWithProps = _react2.default.Children.map(_lightboxModal.props.children, function (child) {
                 var childWithProps = _react2.default.cloneElement(child, _extends({}, rest));
@@ -72564,19 +72797,10 @@ var LightboxTrigger = exports.LightboxTrigger = function (_React$Component2) {
                 rest = _objectWithoutProperties(_lightboxTrigger$prop, ['children']);
 
             var childrenWithProps = _react2.default.Children.map(_lightboxTrigger.props.children, function (child) {
-                console.log('react-lightbox.js traversing through LightboxTrigger children with props ' + JSON.stringify(_extends({}, rest)));
                 var childWithProps = _react2.default.cloneElement(child, _extends({ onClick: _lightboxTrigger.props.openLightbox }, rest));
                 return childWithProps;
             });
 
-            /*
-            this.props.children.props.onClick = this.props.openLightbox;
-            for (var j in this.props){
-                if (j !== 'children'){
-                    this.props.children.props[j] = this.props[j];
-                }
-            }*/
-            console.log('react-lightbox.js traversing through LightboxTrigger result', childrenWithProps);
             return childrenWithProps[0];
         }
     }]);
@@ -72622,7 +72846,6 @@ var Lightbox = exports.Lightbox = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
-            console.log('react-lightbox.js Lightbox children ' + _react2.default.Children);
             var _lightbox = this;
             var i = 0;
             var childrenWithProps = _react2.default.Children.map(this.props.children, function (child) {
@@ -72634,7 +72857,6 @@ var Lightbox = exports.Lightbox = function (_React$Component3) {
                     setLightboxState: _lightbox.setLightboxState,
                     key: i
                 };
-                console.log('react-lightbox.js LIGHTBOX.STATE', _lightbox.state);
                 for (var j in _lightbox.state) {
                     childProps[j] = _lightbox.state[j];
                 }
@@ -72683,6 +72905,7 @@ var mapStateToProps = function mapStateToProps(state, ownProps) {
   return {
     id: ownProps.match.params.id,
     isFetching: state.resourceRequests.activeRequest.isFetching,
+    isSubmitting: state.resourceRequests.activeRequest.isSubmitting,
     data: state.resourceRequests.activeRequest.data
     //data: datas.length >0 ? datas[0]: {}
   };
@@ -72765,7 +72988,7 @@ var FieldGroup = function FieldGroup(_ref) {
                 children
             ),
             help && _react2.default.createElement(
-                HelpBlock,
+                _reactBootstrap.HelpBlock,
                 null,
                 help
             )
@@ -72848,6 +73071,24 @@ var ResourceRequestForm = function (_React$Component) {
             return _react2.default.createElement(
                 _reactBootstrap.Form,
                 { horizontal: true },
+                this.props.isSubmitting && _react2.default.createElement(
+                    _reactBootstrap.FormGroup,
+                    null,
+                    _react2.default.createElement(
+                        _reactBootstrap.Col,
+                        { componentClass: _reactBootstrap.ControlLabel, xsPush: 1, xs: 11, sm: 2 },
+                        " "
+                    ),
+                    _react2.default.createElement(
+                        _reactBootstrap.Col,
+                        { xsPush: 1, xs: 11, sm: 6 },
+                        _react2.default.createElement(
+                            _reactBootstrap.HelpBlock,
+                            null,
+                            "Saving"
+                        )
+                    )
+                ),
                 _react2.default.createElement(FieldGroup, { id: 'accountName', label: 'Account Name:', type: 'text', placeholder: 'Account Name', onChange: this.handleChange, value: !!accountName ? accountName : '' }),
                 _react2.default.createElement(FieldGroup, { id: 'resourceType', label: 'Resource Type:', type: 'text', placeholder: 'Resource Type', onChange: this.handleChange, value: !!resourceType ? resourceType : '' }),
                 _react2.default.createElement(FieldGroup, { id: 'resourceRate', label: 'Resource Rate:', type: 'text', placeholder: 'Resource Rate', onChange: this.handleChange, value: !!resourceRate ? resourceRate : 0 }),
@@ -72893,6 +73134,7 @@ ResourceRequestForm.propTypes = {
     id: _propTypes2.default.string,
     data: _propTypes2.default.object.isRequired,
     isFetching: _propTypes2.default.bool.isRequired,
+    isSubmitting: _propTypes2.default.bool.isRequired,
     fetchResourceRequest: _propTypes2.default.func.isRequired,
     handleChange: _propTypes2.default.func.isRequired,
     handleSubmit: _propTypes2.default.func.isRequired
