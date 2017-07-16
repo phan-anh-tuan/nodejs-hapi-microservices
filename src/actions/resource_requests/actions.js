@@ -7,6 +7,11 @@ export const REQUEST_RESOURCE_REQUEST = 'REQUEST_RESOURCE_REQUEST'
 export const RECEIVE_RESOURCE_REQUEST = 'RECEIVE_RESOURCE_REQUEST'
 export const CHANGE_RESOURCE_REQUEST = 'CHANGE_RESOURCE_REQUEST'
 export const RESET_ACTIVE_RESOURCE_REQUEST = 'RESET_ACTIVE_RESOURCE_REQUEST'
+export const SHOW_REQUEST_COMMENT = 'SHOW_REQUEST_COMMENT'
+export const HIDE_REQUEST_COMMENT = 'HIDE_REQUEST_COMMENT'
+export const SUBMIT_RESOURCE_REQUEST = 'SUBMIT_RESOURCE_REQUEST'
+export const RECEIVE_REQUEST_SUBMISSION = 'RECEIVE_REQUEST_SUBMISSION'
+export const ADD_COMMENT_SUCCESSFULLY = 'ADD_COMMENT_SUCCESSFULLY'
 /**
  * Request a list resource requests
  */
@@ -15,7 +20,6 @@ export function RequestResourceRequests() {
         type: REQUEST_RESOURCE_REQUESTS
     }
 }
-
 /**
  * Request a specific resource request
  */
@@ -81,12 +85,14 @@ export function fetchResourceRequest(id) {
                                         })
                                         .then((nextState) => {
                                             //console.log(`resource_requests/actions nextState ${JSON.stringify(nextState)}`);
-                                            const datas =  nextState.items.filter((request) => { return request._id === id })
-                                            dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                                            //const datas =  nextState.items.filter((request) => { return request._id === id })
+                                            //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                                            dispatch(ReceiveResourceRequest(id));
                                         });
             } else {
-                const datas =  state.resourceRequests.items.filter((request) => { return request._id === id;})
-                dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                //const datas =  state.resourceRequests.items.filter((request) => { return request._id === id;})
+                //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
+                dispatch(ReceiveResourceRequest(id));
                 return Promise.resolve()
             }
             /*
@@ -105,18 +111,50 @@ export function fetchResourceRequest(id) {
         }
     }
 }
+export function handleRequestDelete() {
+    return (dispatch,getState) => {
+        const state = getState();
+        const _id = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data._id));
+        dispatch(submitResourceRequest());
+        return fetch(`http://localhost:3000/api/resource/request/${_id}`, 
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }).then( response => {
+                    if (response.status !== 200) {
+                        let error = new Error(response.statusText);
+                        error.response = response;
+                        dispatch(receiveRequestSubmission(error));
+                        //throw error;
+                    } else {
+                        
+                        return response.json();
+                    }
+                }).then( json => { 
+                                    //console.log('request succeeded with JSON response', json);
+                                    dispatch(receiveRequestSubmission());
+                                    return dispatch(fetchResourceRequests(true)); })
+                .catch( (_error) => {
+                    console.log('request fail with error message', error.message);
+                    dispatch(receiveRequestSubmission(_error));
+                })
+    }
+}
+
 export function handleRequestSubmit() {
     return (dispatch,getState) => {
-         const state = getState();
-         const requestBody = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
-         
-         if (!requestBody.submissionDate) { delete requestBody.submissionDate}
-         if (!requestBody.tentativeStartDate) { delete requestBody.tentativeStartDate}
-         if (!requestBody.fulfilmentDate) { delete requestBody.fulfilmentDate}
-         if (!requestBody.status) { requestBody.status = 'Open'}
-
+        const state = getState();
+        const requestBody = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
+        delete requestBody.comments //DO NOT UPDATE comments 
+        if (!requestBody.submissionDate) { delete requestBody.submissionDate}
+        if (!requestBody.tentativeStartDate) { delete requestBody.tentativeStartDate}
+        if (!requestBody.fulfilmentDate) { delete requestBody.fulfilmentDate}
+        if (!requestBody.status) { requestBody.status = 'Open'}
+        dispatch(submitResourceRequest());
          //console.log('resource_requests/action prepare to submit data', requestBody);
-         return fetch('http://localhost:3000/api/resource/request', 
+        return fetch('http://localhost:3000/api/resource/request', 
                 {
                     method: !!requestBody._id ? 'PUT' : 'POST',
                     headers: {
@@ -127,17 +165,20 @@ export function handleRequestSubmit() {
                     if (response.status !== 200) {
                         let error = new Error(response.statusText);
                         error.response = response;
-                        throw error;
+                        dispatch(receiveRequestSubmission(error));
+                        //throw error;
                     } else {
                         
                         return response.json();
                     }
                 }).then( json => { 
                                     console.log('request succeeded with JSON response', json);
+                                    dispatch(receiveRequestSubmission());
                                     return dispatch(fetchResourceRequests(true)); })
-                /*.catch( (error) => {
+                .catch( (_error) => {
                     console.log('request fail with error message', error.message);
-                })*/
+                    dispatch(receiveRequestSubmission(_error));
+                })
     }
 }
 /**
@@ -153,20 +194,87 @@ export function ReceiveResourceRequests(items) {
 /**
  * Receive a specific resource request
  **/
-export function ReceiveResourceRequest(item) {
-    console.log(`resource_requests/actions.js receive request ${JSON.stringify(item)}`);
+export function ReceiveResourceRequest(id) {
+    //console.log(`resource_requests/actions.js receive request ${JSON.stringify(id)}`);
     return {
         type: RECEIVE_RESOURCE_REQUEST,
-        data: item
+        id: id
     }
 }
 
 export function handleRequestChange(event) {
     const target = event.target;
-    console.log(`resource_requests\action ${target.id} ${target.value}`);
+    //console.log(`resource_requests\action ${target.id} ${target.value}`);
     return {
         type: CHANGE_RESOURCE_REQUEST,
         name: target.id,
         value: target.type === 'checkbox' ? target.checked : target.value
+    }
+}
+
+export function showRequestComment(id) {
+    return {
+        type: SHOW_REQUEST_COMMENT,
+        id: id
+    }
+}
+
+export function hideRequestComment(id) {
+    return {
+        type: HIDE_REQUEST_COMMENT,
+        id: id
+    }
+}
+
+export function addRequestComment(text) {
+    return (dispatch,getState) => {
+              //TODO: show loading 
+            const state = getState();
+            const activeRequest = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
+            const payload = Object.assign({}, { _id: activeRequest._id, text: text})
+            console.log(`resource_requests\action about to lodge a request ${JSON.stringify(payload)}`);
+            return fetch('http://localhost:3000/api/resource/request/comment', 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }).then( response => {
+                    if (response.status !== 200) {
+                        let error = new Error(response.statusText);
+                        error.response = response;
+                        dispatch(addRequestCommentSuccessfully(error));
+                        //throw error;
+                    } else {
+                        return response.json();
+                    }
+                }).then( json => { 
+                        dispatch(addRequestCommentSuccessfully()); 
+                        return dispatch(fetchResourceRequests(true));
+                }).catch( (_error) => {
+                    console.log('request fail with error message', error.message);
+                    dispatch(addRequestCommentSuccessfully(error));
+                })     
+    }
+}
+
+export function addRequestCommentSuccessfully(error = null) {
+    return  {
+        type: ADD_COMMENT_SUCCESSFULLY,
+        error: error
+    }
+}
+
+export function submitResourceRequest() {
+    return {
+        type: SUBMIT_RESOURCE_REQUEST
+    }
+}
+
+export function receiveRequestSubmission(_error = null) {
+    return {
+        type: RECEIVE_REQUEST_SUBMISSION,
+        error: _error
     }
 }

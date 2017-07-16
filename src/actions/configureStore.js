@@ -31,6 +31,8 @@ const initialState = {
       items: [],
       activeRequest: {
           isFetching: false,
+          isSubmitting: false,
+          showComment: false,
           data: {}
       },
       updatedAt: Date.now()

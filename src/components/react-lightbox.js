@@ -49,11 +49,6 @@ export class LightboxModal extends React.Component{
         
     }
     
-
-    
-
-    
-
     componentDidMount(){
         document.addEventListener("keydown", function (e) {
             if ( (this.props.display) && (e.keyCode === 27) ){
@@ -65,7 +60,7 @@ export class LightboxModal extends React.Component{
     render(){
 
         const _lightboxModal = this;
-        const {children, ...rest} = _lightboxModal.props;
+        const {children, display, closeLightbox, ...rest} = _lightboxModal.props;
         const childrenWithProps = React.Children.map(_lightboxModal.props.children,(child) => {
             const childWithProps = React.cloneElement(child, { ...rest})
             return childWithProps;

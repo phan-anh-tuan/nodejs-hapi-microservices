@@ -35,6 +35,7 @@ exports.register = function(server, options, next) {
             callback = filter; 
             _filter = {};
         }
+        //requests.find(_filter).project({ comments: { $slice: 1 } }).toArray( 
         requests.find(_filter).toArray( 
                     (err,result) => {
                         if (err) {
@@ -83,28 +84,55 @@ exports.register = function(server, options, next) {
                             });
     };
 
+    internals.addRequestComment = function(payload,callback) {
+       
+        const requests = internals.db.collection('resource_requests');
+        const ObjectID = internals.ObjectID;
+        let _requestDetail = Object.assign({},payload, { createdDate: payload.createdDate || Date.now()});
+        /*
+            db.resource_requests.findAndModify(
+            {
+                query: { _id: ObjectId("5961af85701e0855986e7529")},
+                update: { $push: { comments: { text: "comment #5", createdDate: Date()}}}
+            })
+        */
+        requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id)},
+                                  { $push: { comments: { text: _requestDetail.text, createdDate: _requestDetail.createdDate }}},
+                                  { returnOriginal: false}, 
+                            (err, result) => { 
+                                    if (err) {
+                                        callback(Boom.internal('Internal MongoDB error', err));
+                                    }   
+                                    callback(null, result);
+                            });
+    };
+
+
     internals.updateRequest = function(requestDetail,callback) {
         
         const requests = internals.db.collection('resource_requests');
         const ObjectID = internals.ObjectID;
         
-        requests.findOneAndUpdate({ _id: new ObjectID(requestDetail._id)},
-                               { 
-                                   accountName: requestDetail.accountName,
-                                   resourceType: requestDetail.resourceType,
-                                   resourceRate: requestDetail.resourceRate,
-                                   quantity: requestDetail.quantity,
-                                   submissionDate: requestDetail.submissionDate,
-                                   tentativeStartDate: requestDetail.tentativeStartDate,
-                                   fulfilmentDate: requestDetail.fulfilmentDate,
-                                   status: requestDetail.status
-                                   //comments will be persisted in xxx collection
-                               }, 
-                               {
+        requests.findOneAndUpdate(
+                                { _id: new ObjectID(requestDetail._id)},
+                                { 
+                                   $set: {
+                                            accountName: requestDetail.accountName,
+                                            resourceType: requestDetail.resourceType,
+                                            resourceRate: requestDetail.resourceRate,
+                                            quantity: requestDetail.quantity,
+                                            submissionDate: requestDetail.submissionDate,
+                                            tentativeStartDate: requestDetail.tentativeStartDate,
+                                            fulfilmentDate: requestDetail.fulfilmentDate,
+                                            status: requestDetail.status
+                                    }
+                                   //comments will be added by addRequestComment                               
+                                }, 
+                                {
                                    returnOriginal: false,
                                    upsert: true
-                               },
-                               (err,result) => {
+                                },
+                                (err,result) => {
                                     if (err) {
                                         callback(Boom.internal('Internal MongoDB error', err));
                                     }   
@@ -210,6 +238,33 @@ exports.register = function(server, options, next) {
             }
         },
         {
+            method: 'POST',
+            path: '/resource/request/comment',
+            config: {
+                validate: {
+                    headers: true,
+                    payload: {
+                        _id: Joi.string().required(),
+                        text: Joi.string().required(),
+                    },
+                    query: false
+                },
+                handler: function(request, reply) 
+                            {
+                            const requestDetails = request.payload;
+                            internals.addRequestComment(requestDetails, 
+                                                    (err,r_request) => {
+                                                        if(err) {
+                                                            return reply(Boom.badRequest(err));
+                                                        }
+                                                        return reply(r_request);
+                                                    })
+                            },
+                description: 'Add a request comment' ,
+                tags: ['api']
+            }
+        },
+        {
             method: 'PUT',
             path: '/resource/request',
             config: {
@@ -250,7 +305,8 @@ exports.register = function(server, options, next) {
                     getRequestByID: internals.getRequestByID,
                     deleteRequest: internals.deleteRequest,
                     updateRequest: internals.updateRequest,
-                    createRequest: internals.createRequest
+                    createRequest: internals.createRequest,
+                    addRequestComment: internals.addRequestComment
                  });
     return next();
 }

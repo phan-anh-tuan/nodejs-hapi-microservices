@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import ResourceRequestForm from '../../components/resource_requests/request_form.js'
-import {fetchResourceRequest,handleRequestChange, handleRequestSubmit} from '../../actions/resource_requests/actions.js';
+import {fetchResourceRequest,handleRequestChange, handleRequestSubmit, handleRequestDelete} from '../../actions/resource_requests/actions.js';
 
 
 const mapStateToProps = (state,ownProps) => {
@@ -9,6 +9,7 @@ const mapStateToProps = (state,ownProps) => {
   return {
     id: ownProps.match.params.id,
     isFetching: state.resourceRequests.activeRequest.isFetching,
+    isSubmitting: state.resourceRequests.activeRequest.isSubmitting,
     data: state.resourceRequests.activeRequest.data
     //data: datas.length >0 ? datas[0]: {}
   }
@@ -19,7 +20,12 @@ const mapDispatchToProps = (dispatch) => {
   return {
       fetchResourceRequest: (id) => { dispatch(fetchResourceRequest(id)) },
       handleChange: (event) => { dispatch(handleRequestChange(event))},
-      handleSubmit: () => { return dispatch(handleRequestSubmit())} /***** how exceptions was handled, should data be populated in mapStateToProps ???***/
+      handleSubmit: (isDelete = false) => { if (isDelete) {
+                                    return dispatch(handleRequestDelete())
+                                  } else {
+                                    return dispatch(handleRequestSubmit())
+                                  }
+                                } /***** how exceptions was handled, should data be populated in mapStateToProps ???***/
   }
 }
 

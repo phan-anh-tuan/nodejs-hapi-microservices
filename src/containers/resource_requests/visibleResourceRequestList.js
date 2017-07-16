@@ -2,7 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import RequestList from '../../components/resource_requests/request_list.js'
 import PropTypes from 'prop-types'
-import {fetchResourceRequests} from '../../actions/resource_requests/actions.js';
+import {fetchResourceRequests, showRequestComment, hideRequestComment, addRequestComment} from '../../actions/resource_requests/actions.js';
 class VisibleResourceRequestList extends React.Component {
   
   constructor(props) {
@@ -22,7 +22,8 @@ class VisibleResourceRequestList extends React.Component {
 
   render() {
     const {isFetching, items, match} = this.props;
-    return (<RequestList items={items} isFetching={isFetching} baseUrl={match.url}/>);
+    //return (<RequestList items={items} isFetching={isFetching} baseUrl={match.url}/>);
+    return (<RequestList baseUrl={match.url} {...this.props}/>);
   }
 }
 
@@ -38,25 +39,33 @@ function getVisibleRequests(requests, status) {
 }
 
 const mapStateToProps = (state,ownProps) => {
-  return {
-    isFetching: state.resourceRequests.isFetching,
-    items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
-    showCommentDialog: state.resourceRequests.isFetching
-  }
+    console.log(`visibleResourceRequestList comments ${state.resourceRequests.activeRequest.data.comments}`)
+    return {
+        isFetching: state.resourceRequests.isFetching,
+        items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
+        showComment: state.resourceRequests.activeRequest.showComment,
+        comments: state.resourceRequests.activeRequest.data.comments
+    }
 }
 
 
 const mapDispatchToProps = (dispatch) => {
   return {
-      fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
-      showComment: () => { alert('comment here');}
+        fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
+        handleShowComment: (id) => { dispatch(showRequestComment(id)) },
+        handleHideComment: () => { dispatch(hideRequestComment()) },
+        handleAddComment: (text) => { return dispatch(addRequestComment(text)) }
   }
 }
 
 VisibleResourceRequestList.propTypes = {
     items: PropTypes.array.isRequired,
     isFetching: PropTypes.bool.isRequired,
-    fetchResourceRequests: PropTypes.func.isRequired
+    showComment: PropTypes.bool.isRequired,
+    comments: PropTypes.array,
+    fetchResourceRequests: PropTypes.func.isRequired,
+    handleShowComment: PropTypes.func.isRequired
+    
 }
 
 export default connect(mapStateToProps,mapDispatchToProps)(VisibleResourceRequestList)
