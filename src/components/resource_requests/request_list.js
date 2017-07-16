@@ -2,7 +2,7 @@ import React from 'react';;
 import {Grid, Row, Col } from 'react-bootstrap';
 import Request from './request.js';
 import { LightboxModal } from '../react-lightbox.js'
-import { Button, FormControl, FormGroup, InputGroup, Form } from 'react-bootstrap'
+import { Button, FormControl, FormGroup, InputGroup, Form, ListGroup, ListGroupItem } from 'react-bootstrap'
 var moment = require('moment')
 
 class RequestList extends React.Component {
@@ -14,7 +14,12 @@ class RequestList extends React.Component {
     }
 
     handleSubmit(event) {
-        this.props.handleAddComment(this.state.text);
+        this.props.handleAddComment(this.state.text).then( () => {  
+                                                    this.props.handleHideComment();
+                                                })
+                                                .catch((error) => {
+                                                    console.log('request_form handleSubmit fail with error message', error.message);
+                                                })
         event.preventDefault();
     }
 
@@ -38,7 +43,7 @@ class RequestList extends React.Component {
         let _comments = [];
         if (comments) {
             comments.forEach((c,i) => {
-                                    _comments.push(<li key={i}>{c.text + ' - ' + moment(c.createdDate).format('MMMM Do YYYY')}</li>)
+                                    _comments.push(<ListGroupItem key={i} header={c.text}>{moment(c.createdDate).format('MMMM Do YYYY')}</ListGroupItem>)
                                 }) 
         }
         { if (isFetching) { gridStyle = {opacity: 0.5} } }
@@ -49,9 +54,9 @@ class RequestList extends React.Component {
                 <Row className='show-grid'>
                     <Col sm={12}>
                         <LightboxModal display={this.props.showComment} closeLightbox={this.props.handleHideComment}>
-                            <ul>
+                            <ListGroup>
                                 {_comments.length > 0? _comments : 'There is no comments'}
-                            </ul>
+                            </ListGroup>
                             <Form onSubmit={this.handleSubmit}>
                                 <FormGroup>
                                     <InputGroup>

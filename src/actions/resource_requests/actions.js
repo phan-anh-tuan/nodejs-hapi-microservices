@@ -111,11 +111,43 @@ export function fetchResourceRequest(id) {
         }
     }
 }
+export function handleRequestDelete() {
+    return (dispatch,getState) => {
+        const state = getState();
+        const _id = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data._id));
+        dispatch(submitResourceRequest());
+        return fetch(`http://localhost:3000/api/resource/request/${_id}`, 
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }).then( response => {
+                    if (response.status !== 200) {
+                        let error = new Error(response.statusText);
+                        error.response = response;
+                        dispatch(receiveRequestSubmission(error));
+                        //throw error;
+                    } else {
+                        
+                        return response.json();
+                    }
+                }).then( json => { 
+                                    //console.log('request succeeded with JSON response', json);
+                                    dispatch(receiveRequestSubmission());
+                                    return dispatch(fetchResourceRequests(true)); })
+                .catch( (_error) => {
+                    console.log('request fail with error message', error.message);
+                    dispatch(receiveRequestSubmission(_error));
+                })
+    }
+}
+
 export function handleRequestSubmit() {
     return (dispatch,getState) => {
         const state = getState();
         const requestBody = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
-         
+        delete requestBody.comments //DO NOT UPDATE comments 
         if (!requestBody.submissionDate) { delete requestBody.submissionDate}
         if (!requestBody.tentativeStartDate) { delete requestBody.tentativeStartDate}
         if (!requestBody.fulfilmentDate) { delete requestBody.fulfilmentDate}
@@ -218,7 +250,8 @@ export function addRequestComment(text) {
                         return response.json();
                     }
                 }).then( json => { 
-                        return dispatch(addRequestCommentSuccessfully()); 
+                        dispatch(addRequestCommentSuccessfully()); 
+                        return dispatch(fetchResourceRequests(true));
                 }).catch( (_error) => {
                     console.log('request fail with error message', error.message);
                     dispatch(addRequestCommentSuccessfully(error));

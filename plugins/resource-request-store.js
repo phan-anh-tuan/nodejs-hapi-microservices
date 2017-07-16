@@ -35,6 +35,7 @@ exports.register = function(server, options, next) {
             callback = filter; 
             _filter = {};
         }
+        //requests.find(_filter).project({ comments: { $slice: 1 } }).toArray( 
         requests.find(_filter).toArray( 
                     (err,result) => {
                         if (err) {
@@ -112,23 +113,26 @@ exports.register = function(server, options, next) {
         const requests = internals.db.collection('resource_requests');
         const ObjectID = internals.ObjectID;
         
-        requests.findOneAndUpdate({ _id: new ObjectID(requestDetail._id)},
-                               { 
-                                   accountName: requestDetail.accountName,
-                                   resourceType: requestDetail.resourceType,
-                                   resourceRate: requestDetail.resourceRate,
-                                   quantity: requestDetail.quantity,
-                                   submissionDate: requestDetail.submissionDate,
-                                   tentativeStartDate: requestDetail.tentativeStartDate,
-                                   fulfilmentDate: requestDetail.fulfilmentDate,
-                                   status: requestDetail.status
-                                   //comments will be persisted in xxx collection
-                               }, 
-                               {
+        requests.findOneAndUpdate(
+                                { _id: new ObjectID(requestDetail._id)},
+                                { 
+                                   $set: {
+                                            accountName: requestDetail.accountName,
+                                            resourceType: requestDetail.resourceType,
+                                            resourceRate: requestDetail.resourceRate,
+                                            quantity: requestDetail.quantity,
+                                            submissionDate: requestDetail.submissionDate,
+                                            tentativeStartDate: requestDetail.tentativeStartDate,
+                                            fulfilmentDate: requestDetail.fulfilmentDate,
+                                            status: requestDetail.status
+                                    }
+                                   //comments will be added by addRequestComment                               
+                                }, 
+                                {
                                    returnOriginal: false,
                                    upsert: true
-                               },
-                               (err,result) => {
+                                },
+                                (err,result) => {
                                     if (err) {
                                         callback(Boom.internal('Internal MongoDB error', err));
                                     }   
