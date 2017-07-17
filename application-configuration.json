@@ -1,0 +1,37 @@
+{
+    "web-server": {
+        "host": "localhost",
+        "port": 3000
+    },
+    "database-server": {
+        "protocol": "mongodb",
+        "host": "localhost",
+        "port": "27017",
+        "database": "NTRR"
+    },
+    "web-client": {
+        "api-endpoint": "http://localhost:3000/api"
+    },
+    "nodemailer": {
+        "host": "smtp.gmail.com",
+        "port": 465,
+        "secure": true,
+        "auth": {
+            "user": "phan.anh.tuan@gmail.com",
+            "pass": "thankYou300913"
+        }
+    },
+    "system": {
+        "fromAddress": {
+            "name": "NT Resource Request Management",
+            "address": "phan.anh.tuan@gmail.com"
+        },
+        "toAddress": {
+            "name": "Tuan Phan",
+            "address": "tuan.phananh@harveynash.com.au"
+        }
+    },
+    "resource-request": {
+        "overdue-duration": 14
+    }
+}

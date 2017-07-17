@@ -11,8 +11,8 @@ const Boom = require('boom');
  * https://www.npmjs.com/package/joi
  */
 const Joi = require('joi');
-
-
+const nconf = require('nconf'); //manage configuration in json file, see details at https://github.com/indexzero/nconf
+const moment = require('moment')
 const internals = {
     db: {},
     ObjectID: {}
@@ -20,7 +20,7 @@ const internals = {
 
 exports.register = function(server, options, next) {
     server.dependency('hapi-mongodb', (_server, next) => {
-                                            server.log(['resource-request-store', 'info'], 'resource-request-store obtained db connection ');
+                                            _server.log(['resource-request-store', 'info'], 'resource-request-store obtained db connection ');
                                             internals.db = _server.mongo.db;
                                             internals.ObjectID = _server.mongo.ObjectID;        
                                             next();
@@ -35,7 +35,7 @@ exports.register = function(server, options, next) {
             callback = filter; 
             _filter = {};
         }
-        //requests.find(_filter).project({ comments: { $slice: 1 } }).toArray( 
+        //console.log(`plugins/resource-request-store.js getRequest filter ${JSON.stringify(_filter)}`)
         requests.find(_filter).toArray( 
                     (err,result) => {
                         if (err) {
@@ -74,7 +74,10 @@ exports.register = function(server, options, next) {
     internals.createRequest = function(requestDetail,callback) {
        
         const requests = internals.db.collection('resource_requests');
-        let _requestDetail = Object.assign({},requestDetail, { submissionDate: requestDetail.submissionDate || Date.now()});
+        let _requestDetail = Object.assign({},requestDetail, { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+                                                               (requestDetail.tentativeStartDate) ? { tentativeStartDate : moment(requestDetail.tentativeStartDate,'DD/MM/YYYY').valueOf() } : {},
+                                                               (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {}
+                                                            );
         requests.insertOne(_requestDetail, 
                             (err, result) => {
                                     if (err) {
@@ -112,21 +115,15 @@ exports.register = function(server, options, next) {
         
         const requests = internals.db.collection('resource_requests');
         const ObjectID = internals.ObjectID;
-        
+        let requestBody = Object.assign({},requestDetail, { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+                                                               (requestDetail.tentativeStartDate) ? { tentativeStartDate : moment(requestDetail.tentativeStartDate,'DD/MM/YYYY').valueOf() } : {},
+                                                               (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {}
+                                                            );
+        delete requestBody._id
         requests.findOneAndUpdate(
                                 { _id: new ObjectID(requestDetail._id)},
                                 { 
-                                   $set: {
-                                            accountName: requestDetail.accountName,
-                                            resourceType: requestDetail.resourceType,
-                                            resourceRate: requestDetail.resourceRate,
-                                            quantity: requestDetail.quantity,
-                                            submissionDate: requestDetail.submissionDate,
-                                            tentativeStartDate: requestDetail.tentativeStartDate,
-                                            fulfilmentDate: requestDetail.fulfilmentDate,
-                                            status: requestDetail.status
-                                    }
-                                   //comments will be added by addRequestComment                               
+                                   $set: requestBody
                                 }, 
                                 {
                                    returnOriginal: false,
@@ -230,7 +227,41 @@ exports.register = function(server, options, next) {
                                                         if(err) {
                                                             return reply(Boom.badRequest(err));
                                                         }
-                                                        return reply(r_request);
+                                                        
+                                                        const emailOptions = {
+                                                            subject: ' A new resource request',
+                                                            to: nconf.get('system:toAddress'),
+                                                            replyTo: {
+                                                                name: nconf.get('system:toAddress:name'),
+                                                                address: nconf.get('system:toAddress:address')
+                                                            }
+                                                        };
+                                                        const template = 'new-resource-request';
+                                                        const context = { request_url: `http://${nconf.get('web-server:host')}:${nconf.get('web-server:port')}/resource/request/${r_request}`}
+                                                        const taskDetail = {
+                                                            type: 'email',
+                                                            data: {
+                                                                    emailOptions: emailOptions,
+                                                                    template: template,
+                                                                    context: context
+                                                                },
+                                                            status: 'open'
+                                                        };
+                                                        server.plugins['TasksStore'].createTask(taskDetail,(_err) => {
+                                                            if (_err) {
+                                                                reply(Boom.internal('Error creating notification email task', _err));
+                                                            }
+                                                            return reply(r_request);
+                                                        })
+                                                        /*
+                                                        const mailer = server.plugins.mailer;
+                                                        mailer.sendEmail(emailOptions, template, context, (_err, info) => {
+                                                            if (_err) {
+                                                                callback(Boom.internal('Error sending notification email error', _err));
+                                                            }
+                                                            return reply(r_request);
+                                                        });
+                                                        */
                                                     })
                             },
                 description: 'Create a resource request' ,
@@ -302,6 +333,7 @@ exports.register = function(server, options, next) {
     ]);
 
     server.expose({
+                    getRequests: internals.getRequests,
                     getRequestByID: internals.getRequestByID,
                     deleteRequest: internals.deleteRequest,
                     updateRequest: internals.updateRequest,
