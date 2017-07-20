@@ -11,202 +11,236 @@ const Boom = require('boom');
  * https://www.npmjs.com/package/joi
  */
 const Joi = require('joi');
+const Async = require('async');
 
+const internals = {};
 
-const internals = {
-    db: {},
-    ObjectID: {}
-};
+internals.applyRoutes = function(server,next) {
+    const User = server.plugins['hapi-mongo-models'].User;
 
-exports.register = function(server, options, next) {
-    
-    
-    server.dependency('hapi-mongodb', (_server, next) => {
-                                             server.log(['user-store', 'info'], 'user-store obtained db connection ');
-                                             internals.db = _server.mongo.db;
-                                             internals.ObjectID = _server.mongo.ObjectID;        
-                                             //console.log(server.mongo);
-                                             next();
-                                         });
-    internals.getUser = function(userId,callback) {
-        
-        /*const users = server.plugins['UserStore'].db.collection('users');
-        const ObjectID = server.plugins['UserStore'].ObjectID;*/
-        const users = internals.db.collection('users');
-        const ObjectID = internals.ObjectID;
-        users.findOne({ _id: new ObjectID(userId)}, 
-                                           (err,result) => {
-                                                            if (err) {
-                                                                callback(Boom.internal('Internal MongoDB error', err));
-                                                            }   
-                                                            callback(null, result);
-                                                        });
-    };
-    
-    internals.deleteUser = function(userId,callback) {
-        
-        const users = internals.db.collection('users');
-        const ObjectID = internals.ObjectID;
-        users.findOneAndDelete({ _id: new ObjectID(userId)}, 
-                                           (err,result) => {
-                                                            if (err) {
-                                                                callback(Boom.internal('Internal MongoDB error', err));
-                                                            }   
-                                                            callback(null, result);
-                                                        });
-    };
-    
-    internals.createUser = function(userDetail,callback) {
-        /*console.log(server.plugins['greeting']);*/
-        
-        const users = internals.db.collection('users');
-                
-        users.insertOne(userDetail, function(err, result) {
-                        if (err) {
-                            callback(Boom.internal('Internal MongoDB error', err));
-                        }   
-                        //console.log(result.insertedId);
-                        callback(null, result.insertedId);
-                    });
-    }
-    
-    internals.updateUser = function(userDetail,callback) {
-        
-        const users = internals.db.collection('users');
-        const ObjectID = internals.ObjectID;
-        //console.log(userDetail);
-        users.findOneAndUpdate({ _id: new ObjectID(userDetail.id)},
-                               { 
-                                   firstname: userDetail.firstname,
-                                   lastname: userDetail.lastname,
-                                   occupation: userDetail.occupation,
-                               }, 
-                               {
-                                   returnOriginal: false,
-                                   upsert: true
-                               },
-                               (err,result) => {
-                                                if (err) {
-                                                    callback(Boom.internal('Internal MongoDB error', err));
-                                                }   
-                                                callback(null, result);
-                                            });
-    };
-    server.route([
-        {
-            method: 'GET',
-            path: '/user/{userId}',
-            config: {
-                 validate: {
-                            headers: true,
-                            params: {
-                                userId: Joi.string().min(4).max(40).required(),
-                            },
-                            query: false
-                        },
-                handler: function(request, reply) {
-                        internals.getUser(request.params.userId, (err,user) => {
-                                                            if (err) { reply(Boom.notFound(err)); }
-                                                            reply(null, user);
-                                                        })
-                     },
-                description: 'Retrieve a user',
-                tags: ['api']
-            }
-        },
-        {
-            method: 'DELETE',
-            path: '/user/{userId}',
-            config: {
-                 validate: {
-                            headers: true,
-                            params: {
-                                userId: Joi.string().min(4).max(40).required(),
-                            },
-                            query: false
-                        },
-                handler: function(request, reply) {
-                           //  return reply('deleted '  + request.params.userId);
-                    
-                             internals.deleteUser(request.params.userId, (err,user) => {
-                                                            if (err) { reply(Boom.notFound(err)); }
-                                                            reply(null, user);
-                                                        })
-                         },
-                description: 'Delete a user',
-                tags: ['api']
-            }
-        },        
-        {
+    server.route({
             method: 'POST',
             path: '/user',
             config: {
-                        validate: {
-                            headers: true,
-                            payload: {
-                                firstname: Joi.string().min(4).max(40).required(),
-                                lastname: Joi.string().min(4).max(40).required(),
-                                occupation: Joi.string().min(4).max(40).required()
-                            },
-                            query: false
-                        },
-                         handler: function(request, reply) 
-                                  {
-                                      const userDetails = request.payload;
-                                      /*const userDetails = {
-                                                            firstname:'Tuan', 
-                                                            lastname: 'Phan', 
-                                                            occupation: 'Software engineer'
-                                                          };*/
-                                      //server.plugins['UserStore'].db = request.mongo.db;
-                                      internals.createUser(userDetails, (err,user) => 
-                                                              {
-                                                                  if(err) {
-                                                                       return reply(Boom.badRequest(err));
-                                                                  }
-                                                                  return reply(user);
-                                                              })
-                                  },
-                         description: 'Create a user' ,
-                         tags: ['api']
-                    }
-        },
-        {
-            method: 'PUT',
-            path: '/user',
-            config: {
-                         handler: function(request, reply) 
-                                  {
-                                      const userDetails = request.payload;
+                validate: {
+                    payload: {
+                        name: Joi.string().required(),
+                        email: Joi.string().email().lowercase().required(),
+                        username: Joi.string().token().lowercase().required(),
+                        password: Joi.string().required()
+                    },
+                },
+                pre: [{
+                        assign: 'usernameCheck',
+                        method: function (request, reply) {
 
-                                      /*const userDetails = {
-                                                            firstname:'Tuan', 
-                                                            lastname: 'Phan', 
-                                                            occupation: 'Software engineer'
-                                                          };*/
-                                      //server.plugins['UserStore'].db = request.mongo.db;
-                                      internals.updateUser(userDetails, (err,user) => 
-                                                              {
-                                                                  if(err) {
-                                                                       return reply(Boom.badRequest(err));
-                                                                  }
-                                                                  return reply(user);
-                                                              })
-                                  },
-                         description: 'Update a user'                    
+                            const conditions = {
+                                username: request.payload.username
+                            };
+
+                            User.findOne(conditions, (err, user) => {
+
+                                if (err) {
+                                    return reply(err);
+                                }
+
+                                if (user) {
+                                    return reply(Boom.conflict('Username already in use.'));
+                                }
+
+                                reply(true);
+                            });
+                        }
+                    }, 
+                    {
+                        assign: 'emailCheck',
+                        method: function (request, reply) {
+                            const conditions = {
+                                email: request.payload.email
+                            };
+
+                            User.findOne(conditions, (err, user) => {
+
+                                if (err) {
+                                    return reply(err);
+                                }
+
+                                if (user) {
+                                    return reply(Boom.conflict('Email already in use.'));
+                                }
+
+                                reply(true);
+                            });
+                        }
+                    }],
+                description: 'Create a user' ,
+                tags: ['api']
+            },
+            handler: function(request, reply) {
+                Async.auto({
+                    user: function(done) {
+                        const username = request.payload.username;
+                        const password = request.payload.password;
+                        const email = request.payload.email;
+
+                        User.create(username, password, email, done);
                     }
-        }
-    ]);
-    server.expose({
-                    getUser: internals.getUser,
-                    createUser: internals.createUser,
-                    deleteUser: internals.deleteUser,
-                    updateUser: internals.updateUser
-                 });
-    return next();
+                }, (error, results) => {
+                    if (error) {
+                        return reply(error);
+                    }
+
+            
+                    const result = {
+                        user: {
+                            _id: results.user._id,
+                            username: results.user.username,
+                            email: results.user.email
+                        },
+                    };
+                    reply(result);
+                })
+            }
+    })
+
+     server.route({
+            method: 'POST',
+            path: '/user/{id}',
+            config: {
+                validate: {
+                    params: {
+                        id: Joi.string().invalid('000000000000000000000000')
+                    },
+                    payload: {
+                        username: Joi.string().token().lowercase().required(),
+                        email: Joi.string().email().lowercase().required(),
+                        isActive: Joi.boolean().required()
+                    },
+                },
+                pre: [{
+                        assign: 'usernameCheck',
+                        method: function (request, reply) {
+
+                            const username = request.payload.username
+                            const id = request.params.id
+                            const filter = {
+                                username,
+                                _id: { $ne: User._idClass(id)}
+                            }
+                            User.find(filter, (err, user) => {
+
+                                if (err) {
+                                    return reply(err);
+                                }
+
+                                if (!user) {
+                                    return reply(Boom.conflict('Username already in use'));
+                                }
+
+                                reply(true);
+                            });
+                        }
+                    },
+                    {
+                        assign: 'emailCheck',
+                        method: function (request, reply) {
+
+                            const email = request.payload.email
+                            const id = request.params.id
+                            const filter = {
+                                email,
+                                _id: { $ne: User._idClass(id)}
+                            }
+                            User.find(filter, (err, user) => {
+
+                                if (err) {
+                                    return reply(err);
+                                }
+
+                                if (!user) {
+                                    return reply(Boom.conflict('Email already in use'));
+                                }
+
+                                reply(true);
+                            });
+                        }
+                    },
+                ],
+                description: 'Update a user' ,
+                tags: ['api']
+            },
+            handler: function(request, reply) {
+                const id = request.params.id
+                const username = request.payload.username
+                const email = request.payload.email
+                const isActive = request.payload.isActive
+                const update = {
+                                $set: {
+                                    username,
+                                    email,
+                                    isActive
+                                }};
+                User.findByIdAndUpdate(id,update,(err,user) => {
+                    if (err) {
+                        reply(err);
+                    }
+                    if (!user) {
+                        return reply(Boom.notFound('Document not found.'));
+                    }
+                    reply(user);
+                })
+            }
+    })
+
+    server.route({
+            method: 'POST',
+            path: '/login',
+            config: {
+                validate: {
+                    payload: {
+                        username: Joi.string().lowercase().required(),
+                        password: Joi.string().required()
+                    },
+                },
+                pre: [{
+                        assign: 'user',
+                        method: function (request, reply) {
+
+                            const username = request.payload.username
+                            const password = request.payload.password
+
+                            User.findByCredentials(username, password, (err, user) => {
+
+                                if (err) {
+                                    return reply(err);
+                                }
+
+                                if (!user) {
+                                    return reply(Boom.conflict('Invalid username or password'));
+                                }
+
+                                reply(user);
+                            });
+                        }
+                    }],
+                description: 'Authenticate a user' ,
+                tags: ['api']
+            },
+            handler: function(request, reply) {
+                if (request.pre.user) {
+                    reply(request.pre.user);
+                }
+            }
+    })
+    next();
 }
 
-exports._internals = internals;
+exports.register = function(server, options, next) {
+    server.dependency('hapi-mongo-models', internals.applyRoutes);
+    next();
+}
+
+//exports._internals = internals;
 
 exports.register.attributes = {
     name: 'UserStore'

@@ -7,7 +7,12 @@
         "protocol": "mongodb",
         "host": "localhost",
         "port": "27017",
-        "database": "NTRR"
+        "database": "NTRR",
+        "mongodb": {
+                    "uri": "mongodb://localhost:27017/NTRR",
+                    "options": {}
+                },
+        "autoIndex": true
     },
     "web-client": {
         "api-endpoint": "http://localhost:3000/api"
