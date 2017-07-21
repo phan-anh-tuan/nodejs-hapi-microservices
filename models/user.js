@@ -48,6 +48,13 @@ class User extends MongoModels {
         })
     }
 
+    static findByUsername(username, callback) {
+
+        const query = { username: username.toLowerCase() };
+
+        this.findOne(query, callback);
+    }
+    
     static findByCredentials(username,password,callback) {
         Async.auto({
             user: function(done) {
