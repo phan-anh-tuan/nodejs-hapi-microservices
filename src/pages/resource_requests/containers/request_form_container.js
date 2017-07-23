@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import ResourceRequestForm from '../../components/resource_requests/request_form.js'
-import {fetchResourceRequest,handleRequestChange, handleRequestSubmit, handleRequestDelete} from '../../actions/resource_requests/actions.js';
+import ResourceRequestForm from '../components/request_form.js'
+import {fetchResourceRequest,handleRequestChange, handleRequestSubmit, handleRequestDelete} from '../actions.js';
 
 
 const mapStateToProps = (state,ownProps) => {

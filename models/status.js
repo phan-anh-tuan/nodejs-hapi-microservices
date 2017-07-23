@@ -5,7 +5,7 @@ const MongoModels = require('mongo-models')
 const Slug = require('slug')
 
 class Status extends MongoModels {
-    static createIndexes(pivot, name, callback) {
+    static create(pivot, name, callback) {
         const document = {
             _id: Slug(pivot + ' ' + name).toLowerCase(),
             pivot,

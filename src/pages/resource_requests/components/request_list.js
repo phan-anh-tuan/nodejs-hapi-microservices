@@ -1,8 +1,9 @@
 import React from 'react';;
 import {Grid, Row, Col } from 'react-bootstrap';
-import Request from './request.js';
-import { LightboxModal } from '../react-lightbox.js'
 import { Button, FormControl, FormGroup, InputGroup, Form, ListGroup, ListGroupItem } from 'react-bootstrap'
+import Request from './request.js';
+import { LightboxModal } from '../../../components/react-lightbox.js'
+
 var moment = require('moment')
 
 class RequestList extends React.Component {

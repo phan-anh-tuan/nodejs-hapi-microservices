@@ -38,5 +38,6 @@
     },
     "resource-request": {
         "overdue-duration": 14
-    }
+    },
+    "cookieSecret": "!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!"
 }

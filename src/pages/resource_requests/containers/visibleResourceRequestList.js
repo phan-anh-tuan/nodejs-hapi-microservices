@@ -1,8 +1,9 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import RequestList from '../../components/resource_requests/request_list.js'
 import PropTypes from 'prop-types'
-import {fetchResourceRequests, showRequestComment, hideRequestComment, addRequestComment} from '../../actions/resource_requests/actions.js';
+import RequestList from '../components/request_list.js'
+
+import {fetchResourceRequests, showRequestComment, hideRequestComment, addRequestComment} from '../actions.js';
 class VisibleResourceRequestList extends React.Component {
   
   constructor(props) {

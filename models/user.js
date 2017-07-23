@@ -6,7 +6,11 @@ const Joi =  require('joi')
 
 class User extends MongoModels {
     constructor(attrs) {
-         super (attrs)
+        super (attrs)
+        Object.defineProperty(this, '_roles', {
+            writable: true,
+            enumerable: false
+        });
     }
     
     static generatePasswordHash(password, callback) {
@@ -83,6 +87,55 @@ class User extends MongoModels {
             }
             callback();
         })
+    }
+
+    canPlayRole(role) {
+
+        if (!this.roles) {
+            return false;
+        }
+
+        return this.roles.hasOwnProperty(role);
+    }
+
+    hydrateRoles(callback) {
+
+        if (!this.roles) {
+            this._roles = {};
+            return callback(null, this._roles);
+        }
+
+        if (this._roles) {
+            return callback(null, this._roles);
+        }
+
+        const self = this;
+        const tasks = {};
+
+        if (this.roles.account) {
+            tasks.account = function (done) {
+
+                Account.findById(self.roles.account.id, done);
+            };
+        }
+
+        if (this.roles.admin) {
+            tasks.admin = function (done) {
+
+                Admin.findById(self.roles.admin.id, done);
+            };
+        }
+
+        Async.auto(tasks, (err, results) => {
+
+            if (err) {
+                return callback(err);
+            }
+
+            self._roles = results;
+
+            callback(null, self._roles);
+        });
     }
 }
 

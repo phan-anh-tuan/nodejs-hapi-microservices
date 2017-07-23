@@ -1,7 +1,7 @@
 'use strict'
 
 const Async = require('async')
-const AuthPlugin = require('../src/auth')
+const AuthPlugin = require('./auth')
 const Boom = require('boom')
 const EscapeRegExp = require('escape-string-regexp')
 const Joi = require('joi')
@@ -12,7 +12,11 @@ internals.applyRoutes = function(server,next) {
     const Account = server.plugins['hapi-mongo-models'].Account;
     const User = server.plugins['hapi-mongo-models'].User;
     const Status = server.plugins['hapi-mongo-models'].Status;
-
+    /*
+        Get list of accounts by username.
+        Get all accounts if username is empty
+        Support paging / sorting
+    */
     server.route({
         method: 'GET',
         path: '/accounts',
@@ -49,7 +53,9 @@ internals.applyRoutes = function(server,next) {
             })
         }
     })
-
+    /*
+        Get the account by Id
+    */
     server.route({
         method: 'GET',
         path: '/accounts/{id}',
@@ -71,7 +77,9 @@ internals.applyRoutes = function(server,next) {
             })
         }
     });
-
+    /*
+        Get the current account
+    */
     server.route({
         method: 'GET',
         path: '/accounts/my',
@@ -96,7 +104,9 @@ internals.applyRoutes = function(server,next) {
             })
         }
     });
-
+    /*
+        create a new account
+    */
     server.route({
         method: 'POST',
         path: '/accounts',
@@ -122,7 +132,9 @@ internals.applyRoutes = function(server,next) {
             })
         }
     });
-
+    /*
+        Update account's name
+    */
     server.route({
         method: 'PUT',
         path: '/accounts/{id}',
@@ -145,7 +157,7 @@ internals.applyRoutes = function(server,next) {
             const id = request.params.id;
             const update = {
                 $set: {
-                    name = request.payload.name
+                    name: request.payload.name
                 }
             }
   
@@ -201,7 +213,10 @@ internals.applyRoutes = function(server,next) {
             });
         }
     });
-
+    
+    /*
+        Link an existing user to an account
+    */
     server.route({
         method: 'PUT',
         path: '/accounts/{id}/user',
@@ -239,6 +254,12 @@ internals.applyRoutes = function(server,next) {
                             }
                             if (!user) {
                                 return reply(Boom.notFound('User document not found'))
+                            }
+                            if (user.roles &&
+                                user.roles.account &&
+                                user.roles.account.id !== request.params.id) {
+
+                                return reply(Boom.conflict('User is already linked to another account. Unlink first.'));
                             }
                             reply(user);
                         })
@@ -289,7 +310,232 @@ internals.applyRoutes = function(server,next) {
             })
         }
     })
+    
+    /*
+        Unlink an account
+    */
+    server.route({
+        method: 'DELETE',
+        path: '/accounts/{id}/user',
+        config: {
+            auth: {
+                strategy: 'session',
+                scope: 'admin'
+            },
+            pre: [{
+                assign: 'account',
+                method: function (request, reply) {
 
+                    Account.findById(request.params.id, (err, account) => {
+
+                        if (err) {
+                            return reply(err);
+                        }
+
+                        if (!account) {
+                            return reply(Boom.notFound('Document not found.'));
+                        }
+
+                        if (!account.user || !account.user.id) {
+                            return reply(account).takeover();
+                        }
+
+                        reply(account);
+                    });
+                }
+            }, {
+                assign: 'user',
+                method: function (request, reply) {
+
+                    User.findById(request.pre.account.user.id, (err, user) => {
+
+                        if (err) {
+                            return reply(err);
+                        }
+
+                        if (!user) {
+                            return reply(Boom.notFound('User document not found.'));
+                        }
+
+                        reply(user);
+                    });
+                }
+            }]
+        },
+        handler: function (request, reply) {
+
+            Async.auto({
+                account: function (done) {
+
+                    const id = request.params.id;
+                    const update = {
+                        $unset: {
+                            user: undefined
+                        }
+                    };
+
+                    Account.findByIdAndUpdate(id, update, done);
+                },
+                user: function (done) {
+
+                    const id = request.pre.user._id.toString();
+                    const update = {
+                        $unset: {
+                            'roles.account': undefined
+                        }
+                    };
+
+                    User.findByIdAndUpdate(id, update, done);
+                }
+            }, (err, results) => {
+
+                if (err) {
+                    return reply(err);
+                }
+
+                reply(results.account);
+            });
+        }
+    });
+
+    /*
+        Add a note to an account
+    */
+     server.route({
+        method: 'POST',
+        path: '/accounts/{id}/notes',
+        config: {
+            auth: {
+                strategy: 'session',
+                scope: 'admin'
+            },
+            validate: {
+                payload: {
+                    data: Joi.string().required()
+                }
+            }
+        },
+        handler: function (request, reply) {
+
+            const id = request.params.id;
+            const update = {
+                $push: {
+                    notes: {
+                        data: request.payload.data,
+                        timeCreated: new Date(),
+                        userCreated: {
+                            id: request.auth.credentials.user._id.toString(),
+                            name: request.auth.credentials.user.username
+                        }
+                    }
+                }
+            };
+
+            Account.findByIdAndUpdate(id, update, (err, account) => {
+
+                if (err) {
+                    return reply(err);
+                }
+
+                reply(account);
+            });
+        }
+    });
+
+    /*
+        set account's status
+    */
+    server.route({
+        method: 'POST',
+        path: '/accounts/{id}/status',
+        config: {
+            auth: {
+                strategy: 'session',
+                scope: 'admin'
+            },
+            validate: {
+                payload: {
+                    status: Joi.string().required()
+                }
+            },
+            pre: [{
+                assign: 'status',
+                method: function (request, reply) {
+
+                    Status.findById(request.payload.status, (err, status) => {
+
+                        if (err) {
+                            return reply(err);
+                        }
+
+                        reply(status);
+                    });
+                }
+            }]
+        },
+        handler: function (request, reply) {
+
+            const id = request.params.id;
+            const newStatus = {
+                id: request.pre.status._id.toString(),
+                name: request.pre.status.name,
+                timeCreated: new Date(),
+                userCreated: {
+                    id: request.auth.credentials.user._id.toString(),
+                    name: request.auth.credentials.user.username
+                }
+            };
+            const update = {
+                $set: {
+                    'status.current': newStatus
+                },
+                $push: {
+                    'status.log': newStatus
+                }
+            };
+
+            Account.findByIdAndUpdate(id, update, (err, account) => {
+
+                if (err) {
+                    return reply(err);
+                }
+
+                reply(account);
+            });
+        }
+    });
+
+    /*
+        Remove an account
+    */
+    server.route({
+        method: 'DELETE',
+        path: '/accounts/{id}',
+        config: {
+            auth: {
+                strategy: 'session',
+                scope: 'admin'
+            },
+            pre: [
+                AuthPlugin.preware.ensureAdminGroup('root')
+            ]
+        },
+        handler: function (request, reply) {
+
+            Account.findByIdAndDelete(request.params.id, (err, account) => {
+
+                if (err) {
+                    return reply(err);
+                }
+
+                if (!account) {
+                    return reply(Boom.notFound('Document not found.'));
+                }
+
+                reply({ success: true });
+            });
+        }
+    });
     next();
 };
 

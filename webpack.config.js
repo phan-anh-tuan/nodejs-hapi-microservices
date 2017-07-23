@@ -1,10 +1,15 @@
 const Path = require('path');
 
 module.exports = {
-    entry: ['babel-polyfill','./src/index.js'],
+    //entry: ['babel-polyfill','./src/index.js'],
+    watch: global.isWatching,
+    entry: {
+        bundle: './src/pages/resource_requests/index.js',
+        signup: './src/pages/signup/index.js'
+    },
     output: {
         path: Path.resolve(__dirname,'public/js'),
-        filename: 'bundle.js'
+        filename: '[name].js'
     },
     module: {
         loaders: [
