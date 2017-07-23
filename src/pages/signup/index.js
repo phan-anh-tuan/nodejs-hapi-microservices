@@ -3,8 +3,8 @@ import 'babel-polyfill'
 import React from 'react'
 import { render } from 'react-dom'
 import { Grid, Row, Col, Nav, NavItem } from 'react-bootstrap'
-import SignUpPage from './sign-up'
-import NavigationBar from '../../../src/components/navigation-bar.js'
+import App from './app'
+import NavigationBar from '../../components/navigation-bar.js'
 
 render(
   <Grid>
@@ -19,7 +19,7 @@ render(
               <NavItem eventKey={4} href="#">Sign In</NavItem>
           </Nav>
         </NavigationBar>        
-        <SignUpPage />
+        <App />
       </Col>
     </Row>
   </Grid>,

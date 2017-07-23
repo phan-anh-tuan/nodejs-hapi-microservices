@@ -49,7 +49,7 @@ class RequestList extends React.Component {
         }
         { if (isFetching) { gridStyle = {opacity: 0.5} } }
         return (
-            <Grid style={gridStyle}>
+            <div style={gridStyle}>
                 {isFetching && <Row className='show-grid'><Col sm={12}><h2>Loading.....</h2></Col></Row>}
                 {rows}
                 <Row className='show-grid'>
@@ -71,7 +71,7 @@ class RequestList extends React.Component {
                         </LightboxModal>
                     </Col>
                 </Row>
-            </Grid>
+            </div>
         )
     }
 }

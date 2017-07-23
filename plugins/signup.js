@@ -131,26 +131,32 @@ internals.applyRoutes = function (server, next) {
 
                     User.findByIdAndUpdate(id, update, done);
                 }],
-                /*welcome: ['linkUser', 'linkAccount', function (results, done) {
+                welcome: ['linkUser', 'linkAccount', function (results, done) {
 
                     const emailOptions = {
-                        subject: 'Your ' + Config.get('/projectName') + ' account',
+                        subject: 'Your NTRR account',
                         to: {
                             name: request.payload.name,
                             address: request.payload.email
+                        },
+                        replyTo: {
+                            name: nconf.get('system:toAddress:name'),
+                            address: nconf.get('system:toAddress:address')
                         }
                     };
                     const template = 'welcome';
-
-                    mailer.sendEmail(emailOptions, template, request.payload, (err) => {
-
-                        if (err) {
-                            console.warn('sending welcome email failed:', err.stack);
-                        }
-                    });
-
-                    done();
-                }],*/
+                    const context = { username: request.payload.username, email: request.payload.email};
+                    const taskDetail = {
+                        type: 'email',
+                        data: {
+                                emailOptions: emailOptions,
+                                template: template,
+                                context: context
+                            },
+                        status: 'open'
+                    };
+                    server.plugins['TasksStore'].createTask(taskDetail,done);
+                }],
                 session: ['linkUser', 'linkAccount', function (results, done) {
 
                     Session.create(results.user._id.toString(), done);
@@ -188,7 +194,7 @@ internals.applyRoutes = function (server, next) {
 
 exports.register = function (server, options, next) {
 
-    server.dependency(['mailer', 'hapi-mongo-models'], internals.applyRoutes);
+    server.dependency(['mailer', 'hapi-mongo-models', 'TasksStore'], internals.applyRoutes);
 
     next();
 };

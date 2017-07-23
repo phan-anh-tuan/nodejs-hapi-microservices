@@ -141,7 +141,7 @@ ResourceRequestForm.propTypes = {
     id: PropTypes.string,
     data: PropTypes.object.isRequired,
     isFetching: PropTypes.bool.isRequired,
-    isSubmitting: PropTypes.bool.isRequired,
+    isSubmitting: PropTypes.bool,
     fetchResourceRequest: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func.isRequired

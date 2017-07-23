@@ -58,7 +58,9 @@ class User extends MongoModels {
 
         this.findOne(query, callback);
     }
-    
+    /* 
+    Find User by (either username or email) and password
+    */
     static findByCredentials(username,password,callback) {
         Async.auto({
             user: function(done) {

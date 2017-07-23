@@ -1,5 +1,6 @@
 {
     "web-server": {
+        "protocol": "http://",
         "host": "localhost",
         "port": 3000
     },
@@ -39,5 +40,10 @@
     "resource-request": {
         "overdue-duration": 14
     },
-    "cookieSecret": "!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!"
+    "cookieSecret": "!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!",
+    "authAttempts": {
+        "forIp": 50,
+        "forIpAndUser": 7
+    },
+    "projectName": "NTRR"
 }

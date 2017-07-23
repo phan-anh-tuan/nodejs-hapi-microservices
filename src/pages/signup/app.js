@@ -8,18 +8,16 @@ import { combineReducers } from 'redux';
 import { accounts } from './reducers.js'
 
 
-import SignUpForm from '../../../src/components/accounts/sign-up-form.js'
+import SignUpForm from './components/sign-up-form.js'
 const loggerMiddleware = createLogger();
 
 const initialState = {
     accounts: {
-        form: {
-            loading: false,
-            success: false,
-            error: undefined,
-            hasError: {},
-            help: {}
-        }
+        loading: false,
+        success: false,
+        error: undefined,
+        hasError: {},
+        help: {}
     }
 }
 
@@ -34,7 +32,7 @@ const store = createStore(rootReducer,
                         )
                      );
 
-export default class SignUpPage extends React.Component {
+export default class App extends React.Component {
     render() {
         return (
             <Provider store={store}>

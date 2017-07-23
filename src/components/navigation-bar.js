@@ -9,7 +9,7 @@ class NavigationBar extends React.Component {
             <Navbar collapseOnSelect fluid>
                 <Navbar.Header>
                     <Navbar.Brand>
-                    <a href="#"><img style={{ height: '32px', width: '32px', position: 'relative', top: '-9px'}} src="/assets/img/logo-square.png"/></a>
+                    <a href="/"><img style={{ height: '32px', width: '32px', position: 'relative', top: '-9px'}} src="/assets/img/logo-square.png"/></a>
                     </Navbar.Brand>
                     <Navbar.Toggle />
                 </Navbar.Header>

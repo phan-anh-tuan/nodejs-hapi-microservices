@@ -62,7 +62,7 @@ const mapDispatchToProps = (dispatch) => {
 VisibleResourceRequestList.propTypes = {
     items: PropTypes.array.isRequired,
     isFetching: PropTypes.bool.isRequired,
-    showComment: PropTypes.bool.isRequired,
+    showComment: PropTypes.bool,
     comments: PropTypes.array,
     fetchResourceRequests: PropTypes.func.isRequired,
     handleShowComment: PropTypes.func.isRequired
