@@ -191,7 +191,7 @@ internals.applyRoutes = function(server,next) {
                 })
             }
     })
-
+    /*
     server.route({
             method: 'POST',
             path: '/login',
@@ -231,7 +231,7 @@ internals.applyRoutes = function(server,next) {
                     reply(request.pre.user);
                 }
             }
-    })
+    })*/
     next();
 }
 

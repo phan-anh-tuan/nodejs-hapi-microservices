@@ -14,9 +14,9 @@ internals.applyStrategy = function (server, next) {
 
     server.auth.strategy('session', 'cookie', {
         password: nconf.get('cookieSecret'),
-        cookie: 'sid-aqua',
+        cookie: 'sid-ntrr',
         isSecure: false,
-        redirectTo: '/login',
+        redirectTo: '/signin',
         appendNext: 'returnUrl',
         validateFunc: function (request, data, callback) {
 

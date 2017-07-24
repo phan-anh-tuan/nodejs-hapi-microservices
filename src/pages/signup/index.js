@@ -16,7 +16,9 @@ render(
               <NavItem eventKey={2} href="#">Contact</NavItem>
           </Nav>
           <Nav pullRight>
-              <NavItem eventKey={4} href="#">Sign In</NavItem>
+              <li role="presentation">
+                <a href="/signin">Sign In</a>
+              </li>
           </Nav>
         </NavigationBar>        
         <App />

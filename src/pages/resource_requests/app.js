@@ -26,15 +26,15 @@ export default class App extends React.Component {
         <Router>
           <Col sm={12}>
             <NavigationBar>
-              <Nav>
+              <Nav onSelect={ (eventKey) => console.log(`resource_requests/app eventKey is clicked`)}>
                   <NavItem eventKey={1} href="#">About</NavItem>
-                  <NavItem eventKey={2} href="#">Contact</NavItem>
-                  <Navbar.Text>
-                      <Link to="/resource/request/create">Create Resource Request</Link>
-                  </Navbar.Text>
+                  <NavItem eventKey={2} href="/contact">Contact</NavItem>
+                  <li role="presentation">
+                    <Link to="/resource/request/create">Create Resource Request</Link>
+                  </li>
                </Nav>
               <Nav pullRight>
-                  <NavItem eventKey={4} href="#">Sign In</NavItem>
+                  <li role="presentation"><a href='/signin/signout'>Sign Out</a></li>
               </Nav>
             </NavigationBar>        
             <Switch>

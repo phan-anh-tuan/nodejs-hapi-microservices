@@ -38,7 +38,7 @@ function shouldFetchRequests(state) {
 function fetchRequests(dispatch) {
     console.log(`resource_requests/actions.js fetching Resource Request`);
     dispatch(RequestResourceRequests());
-    return fetch('http://localhost:3000/api/resource/request')
+    return fetch('http://localhost:3000/api/resource/request',{ credentials: 'same-origin'})
 }
 /**
  * Fetch a list resource requests
@@ -54,9 +54,10 @@ export function fetchResourceRequests(forced = false) {
         console.log(`attempt to refresh resource requests`);
         const state = getState();
         if ((forced && !state.resourceRequests.isFetching) || shouldFetchRequests(state))  {
-            return fetchRequests(dispatch).then( response => response.json())
+            return fetchRequests(dispatch)
+                                    .then( response => { return response.json() })
                                     .then( json => {    
-                                    dispatch(ReceiveResourceRequests(json));
+                                        dispatch(ReceiveResourceRequests(json));
                                     });
         } else {
             // Let the calling code know there's nothing to wait for.
@@ -122,6 +123,7 @@ export function handleRequestDelete() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin'
                 }).then( response => {
                     if (response.status !== 200) {
                         let error = new Error(response.statusText);
@@ -160,6 +162,7 @@ export function handleRequestSubmit() {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(requestBody)
                 }).then( response => {
                     if (response.status !== 200) {
@@ -239,6 +242,7 @@ export function addRequestComment(text) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
                 }).then( response => {
                     if (response.status !== 200) {

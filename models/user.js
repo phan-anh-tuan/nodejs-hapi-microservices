@@ -3,6 +3,8 @@ const MongoModels = require('mongo-models')
 const Bcrypt = require('bcrypt')
 const Async = require('async')
 const Joi =  require('joi')
+const Account = require('./account');
+//const Admin = require('./admin');
 
 class User extends MongoModels {
     constructor(attrs) {
