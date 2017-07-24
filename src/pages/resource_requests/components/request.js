@@ -20,12 +20,23 @@ const Request = (props) => {
             <ListGroupItem>{'Status: ' + status}</ListGroupItem>
             <ListGroupItem>{'Comment:'}<br/>{ (comments && comments.length > 0 ? comments[comments.length - 1].text : '')}</ListGroupItem>
         </ListGroup>
+        <InputGroup>
+            <FormControl type="text" placeholder="Comment"/>
+            <DropdownButton componentClass={InputGroup.Button} id="input-dropdown-addon" title="Action">
+                <MenuItem key="1"><span className="glyphicon glyphicon-plus" aria-hidden="true">{" "}Comment</span></MenuItem>
+                <MenuItem key="2"><span className="glyphicon glyphicon-ok-circle" aria-hidden="true">{" "}Close</span></MenuItem>
+                <MenuItem key="3"><span className="glyphicon glyphicon-remove-circle" aria-hidden="true">{" "}Cancel</span></MenuItem>
+                <MenuItem key="4"><span className="glyphicon glyphicon-eye-open" aria-hidden="true">{" "}Comments</span></MenuItem>
+                <MenuItem key="5"><span className="glyphicon glyphicon-edit" aria-hidden="true">{" "}Edit</span></MenuItem>
+                <MenuItem key="6"><span className="glyphicon glyphicon-trash" aria-hidden="true">{" "}Remove</span></MenuItem>
+            </DropdownButton>
+        </InputGroup>
         <Link to={`${baseUrl}/${_id}`}>
-            <Button>View</Button>
+            <Button>Edit</Button>
         </Link>
         {" "}
         <a onClick={() => props.handleShowComment(_id)}>
-            <Button>Show Comment</Button>
+            <Button>Show Comments</Button>
         </a>
         {" "}
         <Link to={{
@@ -34,14 +45,7 @@ const Request = (props) => {
             <Button>Delele</Button>
         </Link>
         {" "}
-        <InputGroup>
-            <FormControl type="text" />
-            <DropdownButton componentClass={InputGroup.Button} id="input-dropdown-addon" title="Action">
-                <MenuItem key="1">Add comment</MenuItem>
-                <MenuItem key="1">Close with comment</MenuItem>
-                <MenuItem key="1">Cancel with comment</MenuItem>
-            </DropdownButton>
-        </InputGroup>
+        
     </Panel>);
 }
 
