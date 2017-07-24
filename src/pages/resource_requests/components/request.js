@@ -1,5 +1,5 @@
 import React from 'react'
-import { Panel, ListGroup, ListGroupItem, Button } from 'react-bootstrap'
+import { Panel, ListGroup, ListGroupItem, Button, InputGroup, FormControl, DropdownButton, MenuItem } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 
 var moment = require('moment');
@@ -34,6 +34,14 @@ const Request = (props) => {
             <Button>Delele</Button>
         </Link>
         {" "}
+        <InputGroup>
+            <FormControl type="text" />
+            <DropdownButton componentClass={InputGroup.Button} id="input-dropdown-addon" title="Action">
+                <MenuItem key="1">Add comment</MenuItem>
+                <MenuItem key="1">Close with comment</MenuItem>
+                <MenuItem key="1">Cancel with comment</MenuItem>
+            </DropdownButton>
+        </InputGroup>
     </Panel>);
 }
 
