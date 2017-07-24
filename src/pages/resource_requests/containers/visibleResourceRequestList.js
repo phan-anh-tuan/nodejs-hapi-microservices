@@ -55,7 +55,7 @@ const mapDispatchToProps = (dispatch) => {
         fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
         handleShowComment: (id) => { dispatch(showRequestComment(id)) },
         handleHideComment: () => { dispatch(hideRequestComment()) },
-        handleAddComment: (text) => { return dispatch(addRequestComment(text)) }
+        handleAddComment: (id,text) => { return dispatch(addRequestComment(id,text)) }
   }
 }
 

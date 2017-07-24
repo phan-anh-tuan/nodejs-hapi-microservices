@@ -229,12 +229,13 @@ export function hideRequestComment(id) {
     }
 }
 
-export function addRequestComment(text) {
+export function addRequestComment(id,text) {
     return (dispatch,getState) => {
               //TODO: show loading 
             const state = getState();
             const activeRequest = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
-            const payload = Object.assign({}, { _id: activeRequest._id, text: text})
+
+            const payload = Object.assign({}, { _id: (id) ? id : activeRequest._id, text: text})
             console.log(`resource_requests\action about to lodge a request ${JSON.stringify(payload)}`);
             return fetch('http://localhost:3000/api/resource/request/comment', 
                 {

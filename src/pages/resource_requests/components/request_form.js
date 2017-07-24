@@ -99,7 +99,9 @@ class ResourceRequestForm extends React.Component {
                             {" "}
                         </Col>
                         <Col xsPush={1} xs={11} sm={6}>
-                            <HelpBlock>{"Are you sure you want to delete the below request?"}</HelpBlock>
+                            <div key="danger" className="alert alert-danger">
+                                Are you sure you want to delete the below request?
+                            </div>
                         </Col>
                     </FormGroup>
                 }
@@ -127,7 +129,7 @@ class ResourceRequestForm extends React.Component {
                             Back
                         </Button>
                         {" "}
-                        <Button type="submit" onClick={this.handleSubmit}>
+                        <Button bsStyle="primary" type="submit" onClick={this.handleSubmit}>
                             { (this.props.location.state && this.props.location.state.isDelete) ? 'Delete' : button }
                         </Button>
                     </Col>

@@ -63,8 +63,8 @@ class SignUpForm extends React.Component {
                 <FieldGroup id="password" label="Password:" type="password" placeholder="Password" onChange={this.handleChange} value={ this.state.password || ''} help={ this.props.help.password}/>
                 <FormGroup>
                     <Col xsPush={1} xs={11} smOffset={2} sm={6}>
-                        <Button type="submit" onClick={this.handleSubmit}>
-                            Create my account
+                        <Button bsStyle="primary" type="submit" onClick={this.handleSubmit}>
+                            Register
                         </Button>
                     </Col>
                 </FormGroup>
