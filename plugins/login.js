@@ -153,8 +153,6 @@ internals.applyRoutes = function (server, next) {
         },
         handler: function (request, reply) {
 
-            const mailer = request.server.plugins.mailer;
-
             Async.auto({
                 keyHash: function (done) {
 
@@ -186,7 +184,7 @@ internals.applyRoutes = function (server, next) {
                     };
                     const template = 'forgot-password';
                     const context = {
-                        baseHref: nconf.get('web-server:protocal') + nconf.get('web-server:host') + (nconf.get('web-server:port') !== 80? ":" + nconf.get('web-server:port') : '') + '/login/reset',
+                        baseHref: nconf.get('web-server:protocol') + nconf.get('web-server:host') + (nconf.get('web-server:port') !== 80? ":" + nconf.get('web-server:port') : '') + '/signin/reset',
                         email: results.user.email,
                         key: results.keyHash.key
                     };

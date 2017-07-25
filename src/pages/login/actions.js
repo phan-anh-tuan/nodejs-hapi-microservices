@@ -5,10 +5,10 @@ export const LOGIN = 'LOGIN'
 export const LOGIN_RESPONSE = 'LOGIN_RESPONSE'
 export const LOGOUT = 'LOGOUT'
 export const LOGOUT_RESPONSE = 'LOGOUT_RESPONSE'
-export const RESET = 'RESET'
-export const RESET_RESPONSE = 'RESET_RESPONSE'
-export const FORGOT = 'FORGOT'
-export const FORGOT_RESPONSE = 'FORGOT_RESPONSE'
+export const RESET_PASSWORD = 'RESET_PASSWORD'
+export const RESET_PASSWORD_RESPONSE = 'RESET_PASSWORD_RESPONSE'
+export const FORGOT_PASSWORD = 'FORGOT_PASSWORD'
+export const FORGOT_PASSWORD_RESPONSE = 'FORGOT_PASSWORD_RESPONSE'
 
 
 export function login() {
@@ -90,32 +90,78 @@ export function handleLogoutRequest() {
 
 
 
-export function reset() {
+export function resetPassword() {
     return {
-        type: RESET
+        type: RESET_PASSWORD
     }
 }
 
-export function resetResponse(response) {
+export function resetPasswordResponse(response) {
     return {
-        type: RESET_RESPONSE,
+        type: RESET_PASSWORD_RESPONSE,
         response: response
     }
 }
 
-export function handleResetRequest() {}
-
-export function forgot() {
-    return {
-        type: FORGOT    
+export function handleResetPasswordRequest(document) {
+    return (dispatch,getState) => {
+                
+        dispatch(resetPassword());
+            
+        return fetch('http://localhost:3000/api/login/reset', 
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(document)
+                    })
+                    .then( response => response.json())
+                    .then( json => dispatch(resetPasswordResponse(json)))
+                    .catch( (error) => {
+                        console.log('login/actions reset password request failed with error message', error.message);
+                        const response = {};
+                        response.error = error;
+                        dispatch(resetPasswordResponse(response));
+        })
     }
 }
 
-export function forgotResponse(response) {
+export function forgotPassword() {
     return {
-        type: FORGOT_RESPONSE,
+        type: FORGOT_PASSWORD    
+    }
+}
+
+export function forgotPasswordResponse(response) {
+    return {
+        type: FORGOT_PASSWORD_RESPONSE,
         response: response
     }
 }
 
-export function handleForgotRequest() {}
+export function handleForgotPasswordRequest(email) {
+    return (dispatch,getState) => {
+                
+        dispatch(forgotPassword());
+            
+        return fetch('http://localhost:3000/api/login/forgot', 
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({email})
+                    })
+                    .then( response => response.json())
+                    .then( json => dispatch(forgotPasswordResponse(json)))
+                    .catch( (error) => {
+                        console.log('login/actions forgot password request failed with error message', error.message);
+                        const response = {};
+                        response.error = error;
+                        dispatch(forgotPasswordResponse(response));
+        })
+    }
+}

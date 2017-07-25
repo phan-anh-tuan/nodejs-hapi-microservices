@@ -1,7 +1,8 @@
 import React from 'react'
-import { Grid, Row, Form, FormGroup, FormControl, Col, ControlLabel, Button, HelpBlock } from 'react-bootstrap'
+import { Row, Form, FormGroup, FormControl, Col, ControlLabel, Button, HelpBlock } from 'react-bootstrap'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import { Link } from 'react-router-dom'
 const Qs = require('qs')
 
 import FieldGroup from '../../../components/form/field-group'
@@ -19,7 +20,6 @@ class LoginForm extends React.Component {
     handleChange(event) {
         const target = event.target;
         this.setState(Object.assign({}, this.state, { [target.id]: target.value }));
-        console.log(`login-form state changed to ${JSON.stringify(this.state)}`);
     }
 
     handleSubmit(e) {
@@ -27,7 +27,7 @@ class LoginForm extends React.Component {
         const { username, password } = this.state;                                                        
         this.props.handleSubmit({username, password})
                             .then( () => {  
-                                if (this.props.success) {
+                                if (!this.props.error) {
                                     const query = Qs.parse(window.location.search.substring(1));
 
                                     if (query.returnUrl) {
@@ -42,6 +42,10 @@ class LoginForm extends React.Component {
     }
 
     render() {
+        const alerts = [];        
+        alerts.push(<div key="danger" className="alert alert-danger">
+                {this.props.error}
+            </div>);
         return (
             <Form horizontal>
                 {  
@@ -57,12 +61,9 @@ class LoginForm extends React.Component {
                 }
                 { 
                     this.props.error && 
-                    <FormGroup>
-                        <Col componentClass={ControlLabel} xsPush={1} xs={11} sm={2}>
-                            {" "}
-                        </Col>
-                        <Col xsPush={1} xs={11} sm={6}>
-                            <HelpBlock>{this.props.error}</HelpBlock>
+                      <FormGroup>
+                        <Col xsPush={1} xs={11} smOffset={2} sm={6}>
+                            {alerts}
                         </Col>
                     </FormGroup>
                 }
@@ -73,6 +74,7 @@ class LoginForm extends React.Component {
                         <Button bsStyle="primary" type="submit" onClick={this.handleSubmit}>
                             Login
                         </Button>
+                        <Link to="/signin/forgot" className="btn btn-link">Forgot your password?</Link>
                     </Col>
                 </FormGroup>
             </Form>

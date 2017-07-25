@@ -1,6 +1,6 @@
 import React from 'react'
 import { Provider } from 'react-redux'
-import { Grid, Row, Col, Nav, Navbar, NavItem } from 'react-bootstrap'
+import { Grid, Row, Col, Nav, Navbar, NavItem, Button } from 'react-bootstrap'
 import { render } from 'react-dom'
 import {
   BrowserRouter as Router,
@@ -30,7 +30,9 @@ export default class App extends React.Component {
                   <NavItem eventKey={1} href="#">About</NavItem>
                   <NavItem eventKey={2} href="/contact">Contact</NavItem>
                   <li role="presentation">
-                    <Link to="/resource/request/create">Create Resource Request</Link>
+                    <Link to="/resource/request/create" style={{'background-color':'#337ab7', 'border-color':'#2e6da4', 'color':'#fff'}}>
+                        Create
+                    </Link>
                   </li>
                </Nav>
               <Nav pullRight>

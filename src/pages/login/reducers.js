@@ -1,4 +1,4 @@
-import { LOGIN, LOGIN_RESPONSE, LOGOUT, LOGOUT_RESPONSE, RESET, RESET_RESPONSE, FORGOT, FORGOT_RESPONSE } from './actions.js'
+import { LOGIN, LOGIN_RESPONSE, LOGOUT, LOGOUT_RESPONSE, RESET_PASSWORD, RESET_PASSWORD_RESPONSE, FORGOT_PASSWORD, FORGOT_PASSWORD_RESPONSE } from './actions.js'
 const ParseValidation = require('../../actions/helpers/parse-validation');
 
 export function login(state= { 
@@ -17,7 +17,7 @@ export function login(state= {
             //console.log(`login/reducers validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !action.err,
+                success: !!validation.error,
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help
@@ -43,7 +43,7 @@ export function logout(state= {
             //console.log(`login/reducers validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !action.err,
+                success: !!validation.error,
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help
@@ -61,15 +61,15 @@ export function forgot(state= {
                                     help: {}
                                 }, action) {
     switch (action.type) {
-        case FORGOT:
+        case FORGOT_PASSWORD:
             return Object.assign({},state, { loading: true });
-        case FORGOT_RESPONSE:
+        case FORGOT_PASSWORD_RESPONSE:
             //console.log(`login/reducers action.response ${JSON.stringify(action.response)}`);
             const validation = ParseValidation(action.response);
             //console.log(`login/reducers validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !action.err,
+                success: !!validation.error,
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help
@@ -87,15 +87,15 @@ export function reset(state= {
                                     help: {}
                                 }, action) {
     switch (action.type) {
-        case RESET:
+        case RESET_PASSWORD:
             return Object.assign({},state, { loading: true });
-        case RESET_RESPONSE:
+        case RESET_PASSWORD_RESPONSE:
             //console.log(`login/reducers action.response ${JSON.stringify(action.response)}`);
             const validation = ParseValidation(action.response);
             //console.log(`login/reducers validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !action.err,
+                success: !!validation.error,
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help

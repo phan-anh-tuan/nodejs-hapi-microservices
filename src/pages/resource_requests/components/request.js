@@ -34,7 +34,7 @@ class Request extends React.Component {
             default:
                 alert(`${eventKey} is clicked!`)
         }
-    }
+    } 
     
     handleChange(event) {
         const target = event.target;

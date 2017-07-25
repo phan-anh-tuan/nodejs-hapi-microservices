@@ -14,7 +14,9 @@ import {
 import store from './store'
 import NavigationBar from '../../components/navigation-bar.js'
 import LoginForm from './components/login-form'
+import ForgotPasswordForm from './components/forgot-password-form'
 import Logout from './components/logout'
+import ResetPasswordForm from './components/reset-password-form'
 
 const _store = store()
 
@@ -38,7 +40,9 @@ export default class App extends React.Component {
             </NavigationBar>        
             <Switch>
                 <Route exact path="/signin" component={LoginForm} />
+                <Route path="/signin/forgot" component={ForgotPasswordForm} />
                 <Route path="/signin/signout" component={Logout} />
+                <Route path="/signin/reset/:email/:key" component={ResetPasswordForm} />
             </Switch>
           </Col>
         </Router>
