@@ -17,10 +17,27 @@ class Request extends React.Component {
         const baseUrl  = this.props.baseUrl;
         switch(eventKey) {
             case '1':
-                this.props.handleAddComment(_id,this.state.text).catch((error) => {
-                                                    alert('components/request handleAddComment failed with error message', error.message);
-                                                })
+                this.props.handleAddComment(_id,this.state.text)
+                                            .then(() => this.setState({text: ''}))
+                                            .catch((error) => {
+                                                alert('components/request handleAddComment failed with error message', error.message);
+                                            })
                 break;
+            case '2': /*close request successfully */
+                this.props.handleCloseRequestWithComment(_id,this.state.text, 'Close')
+                                            .then(() => this.setState({text: ''}))
+                                            .catch((error) => {
+                                                alert('components/request handleCloseRequestWithComment failed with error message', error.message);
+                                            })
+                break;            
+            case '3': /*fail the request so cancel it */
+                this.props.handleCloseRequestWithComment(_id,this.state.text, 'Cancel')
+                                            .then(() => this.setState({text: ''}))
+                                            .catch((error) => {
+                                                alert('components/request handleCloseRequestWithComment failed with error message', error.message);
+                                            })
+                break;
+                
             case '4': //show all comments
                 this.props.handleShowComment(_id);
                 break;

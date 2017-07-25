@@ -1,6 +1,6 @@
 import { REQUEST_RESOURCE_REQUESTS, RECEIVE_RESOURCE_REQUESTS, REQUEST_RESOURCE_REQUEST, RECEIVE_RESOURCE_REQUEST, 
          RESET_ACTIVE_RESOURCE_REQUEST, CHANGE_RESOURCE_REQUEST, SHOW_REQUEST_COMMENT, HIDE_REQUEST_COMMENT,
-         SUBMIT_RESOURCE_REQUEST, RECEIVE_REQUEST_SUBMISSION, ADD_COMMENT_SUCCESSFULLY } from './actions';
+         SUBMIT_RESOURCE_REQUEST, RECEIVE_REQUEST_SUBMISSION, ADD_COMMENT_SUCCESSFULLY, CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY } from './actions';
 
 function populateActiveRequest(state, id, isFetching = false, isSubmitting = false, showComment = false  ) {
     let datas;
@@ -76,6 +76,7 @@ export function resourceRequests(state= {   isFetching: false,
             data[action.name] = action.value;
             return Object.assign({},state, { activeRequest: { data: data, ...rest} });
         case ADD_COMMENT_SUCCESSFULLY:
+        case CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY:
             /*
             TODO handle exception if (action.error)
             */

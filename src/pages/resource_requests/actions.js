@@ -1,5 +1,6 @@
 import fetch from 'isomorphic-fetch'
 var moment = require('moment');
+import {ApiEndpoint} from '../api-endpoint'
 
 export const REQUEST_RESOURCE_REQUESTS = 'REQUEST_RESOURCE_REQUESTS'
 export const RECEIVE_RESOURCE_REQUESTS = 'RECEIVE_RESOURCE_REQUESTS'
@@ -12,6 +13,7 @@ export const HIDE_REQUEST_COMMENT = 'HIDE_REQUEST_COMMENT'
 export const SUBMIT_RESOURCE_REQUEST = 'SUBMIT_RESOURCE_REQUEST'
 export const RECEIVE_REQUEST_SUBMISSION = 'RECEIVE_REQUEST_SUBMISSION'
 export const ADD_COMMENT_SUCCESSFULLY = 'ADD_COMMENT_SUCCESSFULLY'
+export const CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY = 'CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY'
 /**
  * Request a list resource requests
  */
@@ -38,7 +40,7 @@ function shouldFetchRequests(state) {
 function fetchRequests(dispatch) {
     console.log(`resource_requests/actions.js fetching Resource Request`);
     dispatch(RequestResourceRequests());
-    return fetch('http://localhost:3000/api/resource/request',{ credentials: 'same-origin'})
+    return fetch(`${ApiEndpoint}/resource/request`,{ credentials: 'same-origin'})
 }
 /**
  * Fetch a list resource requests
@@ -117,7 +119,7 @@ export function handleRequestDelete() {
         const state = getState();
         const _id = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data._id));
         dispatch(submitResourceRequest());
-        return fetch(`http://localhost:3000/api/resource/request/${_id}`, 
+        return fetch(`${ApiEndpoint}/resource/request/${_id}`, 
                 {
                     method: 'DELETE',
                     headers: {
@@ -156,7 +158,7 @@ export function handleRequestSubmit() {
         if (!requestBody.status) { requestBody.status = 'Open'}
         dispatch(submitResourceRequest());
          //console.log('resource_requests/action prepare to submit data', requestBody);
-        return fetch('http://localhost:3000/api/resource/request', 
+        return fetch(`${ApiEndpoint}/resource/request`, 
                 {
                     method: !!requestBody._id ? 'PUT' : 'POST',
                     headers: {
@@ -236,8 +238,8 @@ export function addRequestComment(id,text) {
             const activeRequest = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
 
             const payload = Object.assign({}, { _id: (id) ? id : activeRequest._id, text: text})
-            console.log(`resource_requests\action about to lodge a request ${JSON.stringify(payload)}`);
-            return fetch('http://localhost:3000/api/resource/request/comment', 
+
+            return fetch(`${ApiEndpoint}/resource/request/comment`, 
                 {
                     method: 'POST',
                     headers: {
@@ -263,10 +265,49 @@ export function addRequestComment(id,text) {
                 })     
     }
 }
+export function handleCloseRequestWithComment(id,text, status) {
+    return (dispatch,getState) => {
+              //TODO: show loading 
+            const state = getState();
+            const activeRequest = JSON.parse(JSON.stringify(state.resourceRequests.activeRequest.data));
 
+            const payload = Object.assign({}, { _id: (id) ? id : activeRequest._id, text: text, status: status})
+
+            return fetch(`${ApiEndpoint}/resource/request/close`, 
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload)
+                }).then( response => {
+                    if (response.status !== 200) {
+                        let error = new Error(response.statusText);
+                        error.response = response;
+                        dispatch(closeRequestWithCommentSuccessfully(error));
+                    } else {
+                        return response.json();
+                    }
+                }).then( json => { 
+                        dispatch(closeRequestWithCommentSuccessfully()); 
+                        return dispatch(fetchResourceRequests(true));
+                }).catch( (_error) => {
+                    console.log('request fail with error message', error.message);
+                    dispatch(closeRequestWithCommentSuccessfully(error));
+                })     
+    }
+}
 export function addRequestCommentSuccessfully(error = null) {
     return  {
         type: ADD_COMMENT_SUCCESSFULLY,
+        error: error
+    }
+}
+
+export function closeRequestWithCommentSuccessfully(error = null) {
+    return  {
+        type: CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY,
         error: error
     }
 }

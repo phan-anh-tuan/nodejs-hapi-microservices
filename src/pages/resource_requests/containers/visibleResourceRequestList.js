@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import RequestList from '../components/request_list.js'
 
-import {fetchResourceRequests, showRequestComment, hideRequestComment, addRequestComment} from '../actions.js';
+import {fetchResourceRequests, showRequestComment, hideRequestComment, addRequestComment, handleCloseRequestWithComment} from '../actions.js';
 class VisibleResourceRequestList extends React.Component {
   
   constructor(props) {
@@ -55,7 +55,8 @@ const mapDispatchToProps = (dispatch) => {
         fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
         handleShowComment: (id) => { dispatch(showRequestComment(id)) },
         handleHideComment: () => { dispatch(hideRequestComment()) },
-        handleAddComment: (id,text) => { return dispatch(addRequestComment(id,text)) }
+        handleAddComment: (id,text) => { return dispatch(addRequestComment(id,text)) },
+        handleCloseRequestWithComment: (id,text,status) => { return dispatch(handleCloseRequestWithComment(id,text,status)) },
   }
 }
 
@@ -65,8 +66,10 @@ VisibleResourceRequestList.propTypes = {
     showComment: PropTypes.bool,
     comments: PropTypes.array,
     fetchResourceRequests: PropTypes.func.isRequired,
-    handleShowComment: PropTypes.func.isRequired
-    
+    handleShowComment: PropTypes.func.isRequired,
+    handleHideComment: PropTypes.func.isRequired,
+    handleAddComment: PropTypes.func.isRequired,
+    handleCloseRequestWithComment: PropTypes.func.isRequired
 }
 
 export default connect(mapStateToProps,mapDispatchToProps)(VisibleResourceRequestList)

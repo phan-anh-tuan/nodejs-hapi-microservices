@@ -1,5 +1,6 @@
 import fetch from 'isomorphic-fetch'
 var moment = require('moment');
+import {ApiEndpoint} from '../api-endpoint'
 
 export const LOGIN = 'LOGIN'
 export const LOGIN_RESPONSE = 'LOGIN_RESPONSE'
@@ -30,7 +31,7 @@ export function handleLoginRequest(account) {
                 
         dispatch(login());
          
-        return fetch('http://localhost:3000/api/login', 
+        return fetch(`${ApiEndpoint}/login`, 
                 {
                     method: 'POST',
                     headers: {
@@ -69,7 +70,7 @@ export function handleLogoutRequest() {
                 
         dispatch(logout());
             
-        return fetch('http://localhost:3000/api/logout', 
+        return fetch(`${ApiEndpoint}/logout`, 
                     {
                         method: 'DELETE',
                         headers: {
@@ -108,7 +109,7 @@ export function handleResetPasswordRequest(document) {
                 
         dispatch(resetPassword());
             
-        return fetch('http://localhost:3000/api/login/reset', 
+        return fetch(`${ApiEndpoint}/login/reset`, 
                     {
                         method: 'POST',
                         headers: {
@@ -146,7 +147,7 @@ export function handleForgotPasswordRequest(email) {
                 
         dispatch(forgotPassword());
             
-        return fetch('http://localhost:3000/api/login/forgot', 
+        return fetch(`${ApiEndpoint}/login/forgot`, 
                     {
                         method: 'POST',
                         headers: {

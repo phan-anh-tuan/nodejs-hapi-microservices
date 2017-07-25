@@ -37,7 +37,7 @@ class RequestList extends React.Component {
             if (index % 3 === 0) {
                 rows.push(<Row key={index} className='show-grid'>{[]}</Row>)
             }
-            rows[rows.length-1].props.children.push(<Col sm={12} md={4} key={request._id}><Request history={this.props.history} location={this.props.location} match={this.props.match} handleAddComment={this.props.handleAddComment} handleShowComment={this.props.handleShowComment} data={request} baseUrl={baseUrl}/></Col>)
+            rows[rows.length-1].props.children.push(<Col sm={12} md={4} key={request._id}><Request history={this.props.history} location={this.props.location} match={this.props.match} handleAddComment={this.props.handleAddComment} handleShowComment={this.props.handleShowComment} handleCloseRequestWithComment={this.props.handleCloseRequestWithComment} data={request} baseUrl={baseUrl}/></Col>)
         });
 
         let _comments = [];

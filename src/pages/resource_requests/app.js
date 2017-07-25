@@ -30,7 +30,7 @@ export default class App extends React.Component {
                   <NavItem eventKey={1} href="#">About</NavItem>
                   <NavItem eventKey={2} href="/contact">Contact</NavItem>
                   <li role="presentation">
-                    <Link to="/resource/request/create" style={{'background-color':'#337ab7', 'border-color':'#2e6da4', 'color':'#fff'}}>
+                    <Link to="/resource/request/create" style={{'backgroundColor':'#337ab7', 'borderColor':'#2e6da4', 'color':'#fff'}}>
                         Create
                     </Link>
                   </li>

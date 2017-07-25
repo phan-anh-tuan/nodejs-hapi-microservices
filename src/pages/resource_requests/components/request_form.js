@@ -122,6 +122,7 @@ class ResourceRequestForm extends React.Component {
                 <FieldGroup id="status" label="Status:" componentClass="select" placeholder="Status" disabled={isDisabled} onChange={this.handleChange} value={!!status ? status : 'Open'}>
                     <option value="Open">Open</option>
                     <option value="Close">Close</option>
+                    <option value="Cancel">Cancel</option>
                 </FieldGroup>
                 <FormGroup>
                     <Col xsPush={1} xs={11} smOffset={2} sm={6}>

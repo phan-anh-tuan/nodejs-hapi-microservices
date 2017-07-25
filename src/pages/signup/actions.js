@@ -1,6 +1,6 @@
 import fetch from 'isomorphic-fetch'
 var moment = require('moment');
-
+import {ApiEndpoint} from '../api-endpoint'
 export const REGISTER = 'REGISTER'
 export const REGISTER_RESPONSE = 'REGISTER_RESPONSE'
 
@@ -23,7 +23,7 @@ export function handleRegisterRequest(account) {
                 
         dispatch(register());
          
-        return fetch('http://localhost:3000/api/signup', 
+        return fetch(`${ApiEndpoint}/signup`, 
                 {
                     method: 'POST',
                     headers: {

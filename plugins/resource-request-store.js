@@ -20,9 +20,9 @@ const internals = {
 
 exports.register = function(_server, options, next) {
     _server.dependency(['auth','hapi-mongodb'], (server, next) => {
-                                            server.log(['resource-request-store', 'info'], 'resource-request-store obtained db connection ');
-                                            internals.db = server.mongo.db;
-                                            internals.ObjectID = server.mongo.ObjectID;  
+        server.log(['resource-request-store', 'info'], 'resource-request-store obtained db connection ');
+        internals.db = server.mongo.db;
+        internals.ObjectID = server.mongo.ObjectID;  
                                             
         internals.getRequests = function(filter,callback) {
             
@@ -33,8 +33,8 @@ exports.register = function(_server, options, next) {
                 callback = filter; 
                 _filter = {};
             }
-            //console.log(`plugins/resource-request-store.js getRequest filter ${JSON.stringify(_filter)}`)
-            requests.find(_filter).toArray( 
+
+            requests.find(_filter).sort({ submissionDate: -1}).toArray( 
                         (err,result) => {
                             if (err) {
                                 callback(Boom.internal('Internal MongoDB error', err));
@@ -72,7 +72,9 @@ exports.register = function(_server, options, next) {
         internals.createRequest = function(requestDetail,callback) {
         
             const requests = internals.db.collection('resource_requests');
-            let _requestDetail = Object.assign({},requestDetail, { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+            let _requestDetail = Object.assign({},requestDetail,{ submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+                                                                { updatedDate: Date.now() },
+                                                                { owner:  requestDetail.owner }, // owner: {id,name,email}
                                                                 (requestDetail.tentativeStartDate) ? { tentativeStartDate : moment(requestDetail.tentativeStartDate,'DD/MM/YYYY').valueOf() } : {},
                                                                 (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {}
                                                                 );
@@ -90,15 +92,12 @@ exports.register = function(_server, options, next) {
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
             let _requestDetail = Object.assign({},payload, { createdDate: payload.createdDate || Date.now()});
-            /*
-                db.resource_requests.findAndModify(
-                {
-                    query: { _id: ObjectId("5961af85701e0855986e7529")},
-                    update: { $push: { comments: { text: "comment #5", createdDate: Date()}}}
-                })
-            */
+            
             requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id)},
-                                    { $push: { comments: { text: _requestDetail.text, createdDate: _requestDetail.createdDate }}},
+                                    { 
+                                        $push: { comments: { text: _requestDetail.text, createdDate: _requestDetail.createdDate }},
+                                        $set: { updatedDate: Date.now() }
+                                    },
                                     { returnOriginal: false}, 
                                 (err, result) => { 
                                         if (err) {
@@ -108,12 +107,35 @@ exports.register = function(_server, options, next) {
                                 });
         };
 
+        internals.closeRequestWithComment = function(payload,callback) {
+        
+            const requests = internals.db.collection('resource_requests');
+            const ObjectID = internals.ObjectID;
+            let _requestDetail = Object.assign({},payload, { createdDate: payload.createdDate || Date.now()});
+            
+            requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id)},
+                                    { 
+                                        $push: { comments: { text: _requestDetail.text, createdDate: _requestDetail.createdDate }},
+                                        $set: { 
+                                                updatedDate: Date.now(),
+                                                status: _requestDetail.status 
+                                        }
+                                    },
+                                    { returnOriginal: false}, 
+                                (err, result) => { 
+                                        if (err) {
+                                            callback(Boom.internal('Internal MongoDB error', err));
+                                        }   
+                                        callback(null, result);
+                                });
+        };
 
         internals.updateRequest = function(requestDetail,callback) {
             
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
-            let requestBody = Object.assign({},requestDetail, { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+            let requestBody = Object.assign({},requestDetail,   { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
+                                                                { updatedDate: Date.now() },
                                                                 (requestDetail.tentativeStartDate) ? { tentativeStartDate : moment(requestDetail.tentativeStartDate,'DD/MM/YYYY').valueOf() } : {},
                                                                 (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {}
                                                                 );
@@ -121,7 +143,7 @@ exports.register = function(_server, options, next) {
             requests.findOneAndUpdate(
                                     { _id: new ObjectID(requestDetail._id)},
                                     { 
-                                    $set: requestBody
+                                        $set: requestBody
                                     }, 
                                     {
                                     returnOriginal: false,
@@ -235,7 +257,9 @@ exports.register = function(_server, options, next) {
                     },
                     handler: function(request, reply) 
                                 {
-                                const requestDetails = request.payload;
+                                const user = request.auth.credentials.user;
+                                const requestDetails = Object.assign({},request.payload,{ owner: { id: user._id, email: user.email, name: user.roles.account.name}});
+
                                 internals.createRequest(requestDetails, 
                                                         (err,r_request) => {
                                                             if(err) {
@@ -244,7 +268,10 @@ exports.register = function(_server, options, next) {
                                                             
                                                             const emailOptions = {
                                                                 subject: ' A new resource request',
-                                                                to: nconf.get('system:toAddress'),
+                                                                to: {
+                                                                    "name": requestDetails.owner.name,
+                                                                    "address": requestDetails.owner.email
+                                                                },
                                                                 replyTo: {
                                                                     name: nconf.get('system:toAddress:name'),
                                                                     address: nconf.get('system:toAddress:address')
@@ -267,15 +294,6 @@ exports.register = function(_server, options, next) {
                                                                 }
                                                                 return reply(r_request);
                                                             })
-                                                            /*
-                                                            const mailer = server.plugins.mailer;
-                                                            mailer.sendEmail(emailOptions, template, context, (_err, info) => {
-                                                                if (_err) {
-                                                                    callback(Boom.internal('Error sending notification email error', _err));
-                                                                }
-                                                                return reply(r_request);
-                                                            });
-                                                            */
                                                         })
                                 },
                     description: 'Create a resource request' ,
@@ -310,6 +328,38 @@ exports.register = function(_server, options, next) {
                                                         })
                                 },
                     description: 'Add a request comment' ,
+                    tags: ['api']
+                }
+            },
+            {
+                method: 'POST',
+                path: '/resource/request/close',
+                config: {
+                    auth: {
+                        strategy: 'session',
+                        scope: 'account'
+                    },
+                    validate: {
+                        headers: true,
+                        payload: {
+                            _id: Joi.string().required(),
+                            text: Joi.string().allow(''),
+                            status: Joi.string().required(),
+                        },
+                        query: false
+                    },
+                    handler: function(request, reply) 
+                                {
+                                const requestDetails = request.payload;
+                                internals.closeRequestWithComment(requestDetails, 
+                                                        (err,r_request) => {
+                                                            if(err) {
+                                                                return reply(Boom.badRequest(err));
+                                                            }
+                                                            return reply(r_request);
+                                                        })
+                                },
+                    description: 'Close a request with comment' ,
                     tags: ['api']
                 }
             },
@@ -360,7 +410,8 @@ exports.register = function(_server, options, next) {
                         deleteRequest: internals.deleteRequest,
                         updateRequest: internals.updateRequest,
                         createRequest: internals.createRequest,
-                        addRequestComment: internals.addRequestComment
+                        addRequestComment: internals.addRequestComment,
+                        closeRequestWithComment: internals.closeRequestWithComment
                     });
         next();
     });
