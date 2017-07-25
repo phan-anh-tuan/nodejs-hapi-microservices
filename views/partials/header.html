@@ -20,8 +20,7 @@
 <style>
     .searchbox-container{
         width:600px;
-        margin:50px auto;
-    }
+     }
 
     .searchbox{
         position:relative;
@@ -30,6 +29,7 @@
         height:50px;
         float:right;
         overflow:hidden;
+        margin-bottom: 0;
         
         -webkit-transition: width 0.3s;
         -moz-transition: width 0.3s;
@@ -43,25 +43,26 @@
         right:0;
         border:0;
         outline:0;
-        background:#dcddd8;
+        background:#fcf8e3;
+        border-color:#faebcc;
         width:100%;
         height:50px;
         margin:0;
         padding:0px 55px 0px 20px;
-        font-size:20px;
-        color:red;
+        font-size:14px;
+        color:#8a6d3b;
     }
     .searchbox-input::-webkit-input-placeholder {
-        color: #d74b4b;
+        color: #8a6d3b;
     }
     .searchbox-input:-moz-placeholder {
-        color: #d74b4b;
+        color: #8a6d3b;
     }
     .searchbox-input::-moz-placeholder {
-        color: #d74b4b;
+        color: #8a6d3b;
     }
     .searchbox-input:-ms-input-placeholder {
-        color: #d74b4b;
+        color: #8a6d3b;
     }
 
     .searchbox-icon,
@@ -71,8 +72,6 @@
         display:block;
         position:absolute;
         top:0;
-        font-family:verdana;
-        font-size:22px;
         right:0;
         padding:0;
         margin:0;
@@ -84,7 +83,10 @@
         color:#dcddd8;
         background:#172b3c;
     }
-
+    .searchbox-submit{
+        font-size:22px;
+        font-family:verdana;
+    }
 
 
     .searchbox-open{
@@ -103,4 +105,9 @@
     color: #d74b4b;
     }
 </style>
+
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
 </header>  

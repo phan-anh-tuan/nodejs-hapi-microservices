@@ -14,7 +14,7 @@ import VisibleResourceRequestList from './containers/visibleResourceRequestList'
 import RequestFormContainer from './containers/request_form_container'
 import configureStore from './configureStore'
 import NavigationBar from '../../components/navigation-bar.js'
-
+import SearchBox from '../../components/search-box.js'
 
 
 const store = configureStore()
@@ -36,6 +36,7 @@ export default class App extends React.Component {
                   </li>
                </Nav>
               <Nav pullRight>
+                  <li role="presentation"><SearchBox/></li>
                   <li role="presentation"><a href='/signin/signout'>Sign Out</a></li>
               </Nav>
             </NavigationBar>        
