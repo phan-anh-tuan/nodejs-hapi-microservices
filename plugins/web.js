@@ -52,6 +52,18 @@ internals.applyRoutes = function(server,next) {
             },
         }
     });
+
+    server.route({
+        method: 'GET',
+        path: '/report/{path*}',
+        config: {
+            handler: function(request, reply) {
+                let context = { user: { role: 'user'},
+                                script: { url: '/assets/js/report.js'} };
+                reply.view('index',context);
+            },
+        }
+    });
 /*
     server.route({
         method: 'GET',

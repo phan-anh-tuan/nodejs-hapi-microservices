@@ -6,7 +6,8 @@ module.exports = {
     entry: {
         bundle: './src/pages/resource_requests/index.js',
         signup: './src/pages/signup/index.js',
-        login: './src/pages/login/index.js'
+        login: './src/pages/login/index.js',
+        report: './src/pages/report/index.js'
     },
     output: {
         path: Path.resolve(__dirname,'public/js'),
