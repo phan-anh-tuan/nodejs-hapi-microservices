@@ -1,7 +1,7 @@
-import { LOADING, LOADING_RESPONSE } from '../actions/requestStatusReport.js'
+import { LOADING, LOADING_RESPONSE } from '../actions/requestReport.js'
 const ParseValidation = require('../../../actions/helpers/parse-validation');
 
-export function requestStatusReport(state= { 
+export function requestReport(state= { 
                                     loading: false,
                                     success: false,
                                     error: undefined,
@@ -18,11 +18,11 @@ export function requestStatusReport(state= {
             //console.log(`report/reducers/requestStatusReport validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !!validation.error,
+                success: !validation.error,
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help,
-                data: (!!validation.error) ? action.response : []
+                data: (!validation.error) ? action.response : []
             });
         default:
             return state;

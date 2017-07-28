@@ -3,13 +3,13 @@ import thunkMiddleware from 'redux-thunk';
 import { createLogger } from 'redux-logger';
 import { combineReducers } from 'redux';
 
-import { requestStatusReport } from './reducers/requestStatusReport.js'
+import { requestReport } from './reducers/requestReport.js'
 
 const loggerMiddleware = createLogger();
 
 
 const initialState = {
-    requestStatusReport: {
+    requestReport: {
         loading: false,
         success: false,
         error: undefined,
@@ -20,7 +20,7 @@ const initialState = {
 }
 
 const rootReducer = combineReducers({
-    requestStatusReport
+    requestReport
 })
 
 export default function store() {

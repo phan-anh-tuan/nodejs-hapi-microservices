@@ -13,6 +13,7 @@ const Boom = require('boom');
 const Joi = require('joi');
 const nconf = require('nconf'); //manage configuration in json file, see details at https://github.com/indexzero/nconf
 const moment = require('moment')
+const Async = require('async');
 const internals = {
     db: {},
     ObjectID: {}
@@ -34,7 +35,7 @@ exports.register = function(_server, options, next) {
                 _filter = {};
             }
 
-            requests.find(_filter).sort({ submissionDate: -1}).toArray( 
+            requests.find(_filter).project({ updatedDate: 0, owner: 0 }).sort({ submissionDate: -1}).toArray( 
                         (err,result) => {
                             if (err) {
                                 callback(Boom.internal('Internal MongoDB error', err));
@@ -47,7 +48,7 @@ exports.register = function(_server, options, next) {
             
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
-            requests.findOne({ _id: new ObjectID(requestId)}, 
+            requests.findOne({ _id: new ObjectID(requestId)}, {fields: { updatedDate: 0, owner: 0 }} ,
                                 (err,result) => {
                                         if (err) {
                                             callback(Boom.internal('Internal MongoDB error', err));
@@ -112,8 +113,9 @@ exports.register = function(_server, options, next) {
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
             let _requestDetail = Object.assign({},payload, { createdDate: payload.createdDate || Date.now()});
-            
-            requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id)},
+            Async.auto({
+                updateStatus: function(done){
+                    requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id)},
                                     { 
                                         $push: { comments: { text: _requestDetail.text, createdDate: _requestDetail.createdDate }},
                                         $set: { 
@@ -121,13 +123,21 @@ exports.register = function(_server, options, next) {
                                                 status: _requestDetail.status 
                                         }
                                     },
-                                    { returnOriginal: false}, 
-                                (err, result) => { 
-                                        if (err) {
-                                            callback(Boom.internal('Internal MongoDB error', err));
-                                        }   
-                                        callback(null, result);
-                                });
+                                    { returnOriginal: false},done);
+                },
+                updateFulfilmentDate: ['updateStatus', function(results,done){
+                    requests.findOneAndUpdate({ _id: new ObjectID(_requestDetail._id), fulfilmentDate: null},
+                                    { 
+                                        $set: { 
+                                            fulfilmentDate: Date.now(),
+                                        }
+                                    },
+                                    { returnOriginal: false},done);
+                }]
+            }, (err, results) => {
+                    if (err) { return callback(Boom.internal('Internal MongoDB error', err))}   
+                    callback(null, results.updateStatus);
+            });
         };
 
         internals.updateRequest = function(requestDetail,callback) {
@@ -137,8 +147,8 @@ exports.register = function(_server, options, next) {
             let requestBody = Object.assign({},requestDetail,   { submissionDate: (requestDetail.submissionDate) ? moment(requestDetail.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() },
                                                                 { updatedDate: Date.now() },
                                                                 (requestDetail.tentativeStartDate) ? { tentativeStartDate : moment(requestDetail.tentativeStartDate,'DD/MM/YYYY').valueOf() } : {},
-                                                                (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {}
-                                                                );
+                                                                (requestDetail.fulfilmentDate) ? { fulfilmentDate : moment(requestDetail.fulfilmentDate,'DD/MM/YYYY').valueOf() } : {},
+                                                                (!requestDetail.fulfilmentDate && (['close','cancel'].indexOf(requestDetail.status.toLowerCase()) !== -1)) ? { fulfilmentDate : moment().valueOf() } : {});
             delete requestBody._id
             requests.findOneAndUpdate(
                                     { _id: new ObjectID(requestDetail._id)},
@@ -168,11 +178,17 @@ exports.register = function(_server, options, next) {
                     },
                     validate: {
                                 headers: true,
-                                query: false
+                                query: {
+                                    year: Joi.number(),
+                                },
                     },
                     handler: function(request, reply) {
-                            let filter = {}; //temporarily bypass input
-                            internals.getRequests((err,r_request) => {
+                            let filter = {};
+                            if (request.query.year) {
+                                filter = { $and: [ {submissionDate: { $gte : moment(`${request.query.year}-01-01`).valueOf()}}, {submissionDate: { $lte : moment(`${request.query.year}-12-31`).valueOf()}}]}
+                            }
+                             
+                            internals.getRequests(filter,(err,r_request) => {
                                                     if (err) { reply(Boom.notFound(err)); }
                                                     reply(null, r_request);
                                                 })
