@@ -23,7 +23,7 @@ export function fetchData(year) {
                 
         dispatch(loading());
             
-        return fetch(`${ApiEndpoint}/resource/request?year=${year}`, 
+        return fetch(`${ApiEndpoint}/resource/request?year=${year}&limit=-1`, 
                     {
                         method: 'GET',
                         headers: {

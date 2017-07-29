@@ -14,6 +14,7 @@ export const SUBMIT_RESOURCE_REQUEST = 'SUBMIT_RESOURCE_REQUEST'
 export const RECEIVE_REQUEST_SUBMISSION = 'RECEIVE_REQUEST_SUBMISSION'
 export const ADD_COMMENT_SUCCESSFULLY = 'ADD_COMMENT_SUCCESSFULLY'
 export const CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY = 'CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY'
+export const SET_CURRENT_PAGE = 'SET_CURRENT_PAGE'
 /**
  * Request a list resource requests
  */
@@ -26,26 +27,40 @@ export function RequestResourceRequests() {
  * Request a specific resource request
  */
 export function RequestResourceRequest() {
-    console.log(`resource_requests/actions.js create RequestResourceRequest`);
+    //console.log(`resource_requests/actions.js create RequestResourceRequest`);
     return {
         type: REQUEST_RESOURCE_REQUEST
     }
 }
 
 function shouldFetchRequests(state) {
-    if (moment().diff(moment(state.resourceRequests.updatedAt)) / 1000 > 60) { return true; } //refresh data every 60 second
-    return (state.resourceRequests.items.length === 0 && !state.resourceRequests.isFetching);
+    //if (moment().diff(moment(state.resourceRequests.updatedAt)) / 1000 > 60) { return true; } //refresh data every 60 second
+    return !state.resourceRequests.isFetching;
 }
 
-function fetchRequests(dispatch) {
-    console.log(`resource_requests/actions.js fetching Resource Request`);
+function fetchRequests(filter,dispatch) {
+    //console.log(`resource_requests/actions.js fetching Resource Request`);
     dispatch(RequestResourceRequests());
-    return fetch(`${ApiEndpoint}/resource/request`,{ credentials: 'same-origin'})
+    return fetch(`${ApiEndpoint}/resource/request?year=${filter.year}&page=${filter.page}`,{ credentials: 'same-origin'})
+}
+
+function setCurrentPage(direction) {
+    return {
+        type: SET_CURRENT_PAGE,
+        direction: direction
+    }
 }
 /**
  * Fetch a list resource requests
  */
-export function fetchResourceRequests(forced = false) {
+export function fetchResourceRequests(forced = false, direction = '') {
+    let _direction = direction
+    
+    if (typeof forced === 'string') {
+        _direction = forced
+        forced = false;
+    }
+
     const options = {
                         method: 'GET',
                         headers: {
@@ -53,10 +68,11 @@ export function fetchResourceRequests(forced = false) {
                         },
                     }
     return (dispatch,getState) => {
-        console.log(`attempt to refresh resource requests`);
+        dispatch(setCurrentPage(_direction))
         const state = getState();
-        if ((forced && !state.resourceRequests.isFetching) || shouldFetchRequests(state))  {
-            return fetchRequests(dispatch)
+        if (forced || shouldFetchRequests(state))  {
+            //console.log(`resource-requests/actions attempt to refresh resource requests direction=${direction} state = ${JSON.stringify(state)}`);
+            return fetchRequests({ page: state.resourceRequests.page, year: state.resourceRequests.year},dispatch)
                                     .then( response => { return response.json() })
                                     .then( json => {    
                                         dispatch(ReceiveResourceRequests(json));
@@ -76,42 +92,31 @@ export function fetchResourceRequest(id) {
         const options = {
                             method: 'GET',
                             headers: {
-                                'Access-Control-Allow-Origin': '*'
+                                'Content-Type': 'application/json'
                             },
+                            credentials: 'same-origin'
                         }
         return (dispatch,getState) => {
-            const state = getState();
-            if (shouldFetchRequests(state)) {
-                return fetchRequests(dispatch).then( response => response.json())
-                                        .then( json => {    
-                                            return dispatch(ReceiveResourceRequests(json));
-                                        })
-                                        .then((nextState) => {
-                                            //console.log(`resource_requests/actions nextState ${JSON.stringify(nextState)}`);
-                                            //const datas =  nextState.items.filter((request) => { return request._id === id })
-                                            //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
-                                            dispatch(ReceiveResourceRequest(id));
-                                        });
-            } else {
-                //const datas =  state.resourceRequests.items.filter((request) => { return request._id === id;})
-                //dispatch(ReceiveResourceRequest(datas.length >0 ? datas[0]: {}));
-                dispatch(ReceiveResourceRequest(id));
-                return Promise.resolve()
-            }
-            /*
             dispatch(RequestResourceRequest());
-            return fetch(`http://localhost:3000/api/resource/request/${id}`)
-                        .then( response => response.json())
+            return fetch(`${ApiEndpoint}/resource/request/${id}`,options)
+                        .then( response => {
+                            if (response.status !== 200 ){
+                                let error = new Error(response.statusText);
+                                error.response = response;
+                                throw(error);
+                            }
+                            return response.json()})
                         .then( json => {    
-                                        dispatch(ReceiveResourceRequest(json));
-                                    });
-            */
+                            dispatch(ReceiveResourceRequest(json));
+                        });
         }
     } else {
         //console.log(`resource_requests/actions.js trying to reset active request`);
-        return { 
-            type: RESET_ACTIVE_RESOURCE_REQUEST,
-        }
+        return (dispatch,getState) => {
+            dispatch({type: RESET_ACTIVE_RESOURCE_REQUEST})
+            return Promise.resolve();
+        };
+        
     }
 }
 export function handleRequestDelete() {
@@ -199,11 +204,11 @@ export function ReceiveResourceRequests(items) {
 /**
  * Receive a specific resource request
  **/
-export function ReceiveResourceRequest(id) {
+export function ReceiveResourceRequest(json) {
     //console.log(`resource_requests/actions.js receive request ${JSON.stringify(id)}`);
     return {
         type: RECEIVE_RESOURCE_REQUEST,
-        id: id
+        data: json
     }
 }
 

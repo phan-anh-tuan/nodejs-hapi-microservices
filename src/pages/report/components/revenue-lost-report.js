@@ -11,6 +11,7 @@ class RevenueLostReport extends React.Component {
     render() {
         
         const workday_count = (start,end) => {
+            //console.log(`revenue-lost-report calculating workings days between ${moment(start).format('MMMM Do YYYY')} ${moment(end).format('MMMM Do YYYY')}`)
             var first = start.clone().endOf('week'); // end of first week
             var last = end.clone().startOf('week'); // start of last week
             var days = last.diff(first,'days') * 5 / 7; // this will always multiply of 7
@@ -18,11 +19,11 @@ class RevenueLostReport extends React.Component {
             if(start.day() == 0) --wfirst; // -1 if start with sunday 
             var wlast = end.day() - last.day(); // check last week
             if(end.day() == 6) --wlast; // -1 if end with saturday
-            return wfirst + days + wlast; // get the total
+            return Math.floor(wfirst + days + wlast); // get the total
         };
 
         const rawData = this.props.data;
-        const data = [
+        let data = [
             { y: 0, x: "Jan", Label:'xxx' },
             { y: 0, x: "Feb", Label:'xxx' },
             { y: 0, x: "Mar", Label:'xxx' },
@@ -40,8 +41,21 @@ class RevenueLostReport extends React.Component {
         rawData.forEach(request => {
             const submissionDate = moment(request.submissionDate);
             const fulfilmentDate = (request.fulfilmentDate) ? moment(request.fulfilmentDate) : moment();
+            
+            let start = submissionDate.clone();
+            if (start.clone().add(1,'months') < fulfilmentDate) {
+                while(start < fulfilmentDate) {
+                    const end = start.endOf('month')
+                    const working_days = workday_count(submissionDate, end);
+                    const month = end.month()
+                    data[month].y = data[month].y + (working_days * request.quantity * request.resourceRate)
+                    //console.log(`revenue-lost-report end/working_days ${moment(end).format('MMMM Do YYYY')}/${working_days} quantity: ${request.quantity} rate: ${request.resourceRate} month: ${month}`)
+                    start.add(1,'months');
+                }
+                start.subtract(1,'months')
+            } 
             const working_days = workday_count(submissionDate, fulfilmentDate);
-            const month = submissionDate.month()
+            const month = fulfilmentDate.month()
             data[month].y = data[month].y + (working_days * request.quantity * request.resourceRate)
         })
 

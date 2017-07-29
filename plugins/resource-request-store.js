@@ -25,23 +25,45 @@ exports.register = function(_server, options, next) {
         internals.db = server.mongo.db;
         internals.ObjectID = server.mongo.ObjectID;  
                                             
-        internals.getRequests = function(filter,callback) {
+        internals.getRequests = function(filter,pagination, callback) {
             
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
             let _filter = filter;
+            let _pagination = pagination;
             if (typeof filter === 'function') {
                 callback = filter; 
                 _filter = {};
+                _pagination = {
+                        page: 1,
+                        limit: nconf.get('pages:resource-requests:page-limit')
+                }
+            } else if (typeof pagination === 'function') {
+                callback = pagination
+                _pagination = {
+                        page: 1,
+                        limit: nconf.get('pages:resource-requests:page-limit')
+                }
             }
-
-            requests.find(_filter).project({ updatedDate: 0, owner: 0 }).sort({ submissionDate: -1}).toArray( 
-                        (err,result) => {
-                            if (err) {
-                                callback(Boom.internal('Internal MongoDB error', err));
-                            }   
-                            callback(null, result);
-                        });
+            
+            //console.log(`plugins\resource-request-store ${JSON.stringify(_pagination)} ${JSON.stringify(_filter)}`);
+            if (_pagination.limit > -1) {
+                requests.find(_filter).skip((_pagination.page - 1)*_pagination.limit).limit(_pagination.limit).project({ updatedDate: 0, owner: 0 }).sort({ submissionDate: -1}).toArray( 
+                            (err,result) => {
+                                if (err) {
+                                    callback(Boom.internal('Internal MongoDB error', err));
+                                }   
+                                callback(null, result);
+                            });
+            } else {
+                requests.find(_filter).project({ updatedDate: 0, owner: 0 }).sort({ submissionDate: -1}).toArray( 
+                            (err,result) => {
+                                if (err) {
+                                    callback(Boom.internal('Internal MongoDB error', err));
+                                }   
+                                callback(null, result);
+                            });                
+            }
         };
 
         internals.getRequestByID = function(requestId,callback) {
@@ -167,6 +189,25 @@ exports.register = function(_server, options, next) {
                                     });
         };
 
+        internals.checkOwnership = function(condition, callback){
+            const {documentId, userId} = condition;
+            const ObjectID = internals.ObjectID;
+            
+            const filter = { $and: [ { 'owner.id': new ObjectID(userId)}, { _id: new ObjectID(documentId)}]}
+            
+            internals.getRequests(filter,{ page: 1, limit: -1}, (error,results) => {
+                    if (error) {
+                        return callback(error);
+                    }
+
+                    if (results.length === 0) {
+                        return callback(Boom.unauthorized('Unauthorized access'));
+                    }
+
+                    callback(results);
+            }) 
+        }
+
         server.route([
             {
                 method: 'GET',
@@ -179,16 +220,21 @@ exports.register = function(_server, options, next) {
                     validate: {
                                 headers: true,
                                 query: {
-                                    year: Joi.number(),
+                                    year: Joi.number().optional(),
+                                    page: Joi.number().optional(),
+                                    limit: Joi.number().optional()
                                 },
                     },
                     handler: function(request, reply) {
                             let filter = {};
+                            const page = request.query.page ? request.query.page : 1;
+                            const limit = request.query.limit? request.query.limit : nconf.get('pages:resource-requests:page-limit');
+                            const ObjectID = internals.ObjectID;
                             if (request.query.year) {
-                                filter = { $and: [ {submissionDate: { $gte : moment(`${request.query.year}-01-01`).valueOf()}}, {submissionDate: { $lte : moment(`${request.query.year}-12-31`).valueOf()}}]}
+                                filter = { $and: [ { 'owner.id': new ObjectID(request.auth.credentials.user._id)}, {submissionDate: { $gte : moment(`${request.query.year}-01-01`).valueOf()}}, {submissionDate: { $lte : moment(`${request.query.year}-12-31`).valueOf()}}]}
                             }
                              
-                            internals.getRequests(filter,(err,r_request) => {
+                            internals.getRequests(filter,{page,limit},(err,r_request) => {
                                                     if (err) { reply(Boom.notFound(err)); }
                                                     reply(null, r_request);
                                                 })
@@ -212,15 +258,25 @@ exports.register = function(_server, options, next) {
                                 },
                                 query: false
                     },
-                    handler: function(request, reply) {
-                            internals.getRequestByID(request.params.requestId, 
-                                                    (err,r_request) => {
-                                                        if (err) { reply(Boom.notFound(err)); }
-                                                        reply(null, r_request);
-                                                    })
-                    },
+                    pre: [
+                        {
+                            assign: 'ownerCheck',
+                            method: function (request, reply) {
+                                internals.checkOwnership({ documentId: request.params.requestId, userId: request.auth.credentials.user._id},reply)                       
+                            }
+                        }
+                    ],
                     description: 'Retrieve a resource request',
                     tags: ['api']
+                },
+                handler: function(request, reply) {
+                        reply(request.pre.ownerCheck[0]);
+                        /*
+                        internals.getRequestByID(request.params.requestId, 
+                                                (err,r_request) => {
+                                                    if (err) { reply(Boom.notFound(err)); }
+                                                    reply(null, r_request);
+                                                })*/
                 }
             },
             {
@@ -238,15 +294,21 @@ exports.register = function(_server, options, next) {
                             },
                             query: false
                     },
-                    handler: function(request, reply) {
-                            internals.deleteRequest(request.params.requestId, 
-                                                (err,r_request) => {
-                                                    if (err) { reply(Boom.notFound(err)); }
-                                                    reply(null, r_request);
-                                                })
-                    },
+                    pre: [{
+                        assign: 'ownerCheck',
+                        method: function (request, reply) {
+                            internals.checkOwnership({ documentId: request.params.requestId, userId: request.auth.credentials.user._id},reply)                       
+                        }
+                    }],
                     description: 'Delete a resource request',
                     tags: ['api']
+                },
+                handler: function(request, reply) {
+                        internals.deleteRequest(request.params.requestId, 
+                                            (err,r_request) => {
+                                                if (err) { reply(Boom.notFound(err)); }
+                                                reply(null, r_request);
+                                            })
                 }
             },        
             {
@@ -332,19 +394,24 @@ exports.register = function(_server, options, next) {
                         },
                         query: false
                     },
-                    handler: function(request, reply) 
-                                {
-                                const requestDetails = request.payload;
-                                internals.addRequestComment(requestDetails, 
-                                                        (err,r_request) => {
-                                                            if(err) {
-                                                                return reply(Boom.badRequest(err));
-                                                            }
-                                                            return reply(r_request);
-                                                        })
-                                },
+                    pre: [{
+                        assign: 'ownerCheck',
+                        method: function (request, reply) {
+                            internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                        }
+                    }],
                     description: 'Add a request comment' ,
                     tags: ['api']
+                },
+                handler: function(request, reply) {
+                    const requestDetails = request.payload;
+                    internals.addRequestComment(requestDetails, 
+                                            (err,r_request) => {
+                                                if(err) {
+                                                    return reply(Boom.badRequest(err));
+                                                }
+                                                return reply(r_request);
+                                            })
                 }
             },
             {
@@ -364,19 +431,24 @@ exports.register = function(_server, options, next) {
                         },
                         query: false
                     },
-                    handler: function(request, reply) 
-                                {
-                                const requestDetails = request.payload;
-                                internals.closeRequestWithComment(requestDetails, 
-                                                        (err,r_request) => {
-                                                            if(err) {
-                                                                return reply(Boom.badRequest(err));
-                                                            }
-                                                            return reply(r_request);
-                                                        })
-                                },
+                    pre: [{
+                        assign: 'ownerCheck',
+                        method: function (request, reply) {
+                            internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                        }
+                    }],
                     description: 'Close a request with comment' ,
                     tags: ['api']
+                },
+                handler: function(request, reply){
+                    const requestDetails = request.payload;
+                    internals.closeRequestWithComment(requestDetails, 
+                                            (err,r_request) => {
+                                                if(err) {
+                                                    return reply(Boom.badRequest(err));
+                                                }
+                                                return reply(r_request);
+                                            })
                 }
             },
             {
@@ -402,20 +474,25 @@ exports.register = function(_server, options, next) {
                         },
                         query: false
                     },
-                    handler: function(request, reply) 
-                            {
-                                const requestDetails = request.payload;
-
-                                internals.updateRequest(requestDetails, 
-                                                        (err,r_request) => {
-                                                            if(err) {
-                                                                return reply(Boom.badRequest(err));
-                                                            }
-                                                            return reply(r_request);
-                                                        })
-                            },
+                    pre: [{
+                        assign: 'ownerCheck',
+                        method: function (request, reply) {
+                            internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                        }
+                    }],
                     description: 'Update a resource request',
                     tags: ['api']
+                },
+                handler: function(request, reply) {
+                    const requestDetails = request.payload;
+
+                    internals.updateRequest(requestDetails, 
+                                            (err,r_request) => {
+                                                if(err) {
+                                                    return reply(Boom.badRequest(err));
+                                                }
+                                                return reply(r_request);
+                                            })
                 }
             }
         ]);
@@ -427,7 +504,8 @@ exports.register = function(_server, options, next) {
                         updateRequest: internals.updateRequest,
                         createRequest: internals.createRequest,
                         addRequestComment: internals.addRequestComment,
-                        closeRequestWithComment: internals.closeRequestWithComment
+                        closeRequestWithComment: internals.closeRequestWithComment,
+                        checkOwnership: internals.checkOwnership
                     });
         next();
     });

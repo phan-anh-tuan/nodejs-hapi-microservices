@@ -18,7 +18,7 @@ const mapStateToProps = (state,ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-      fetchResourceRequest: (id) => { dispatch(fetchResourceRequest(id)) },
+      fetchResourceRequest: (id) => dispatch(fetchResourceRequest(id)) ,
       handleChange: (event) => { dispatch(handleRequestChange(event))},
       handleSubmit: (isDelete = false) => { if (isDelete) {
                                     return dispatch(handleRequestDelete())

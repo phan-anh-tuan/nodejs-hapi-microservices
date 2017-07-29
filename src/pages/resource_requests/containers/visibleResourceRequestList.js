@@ -12,15 +12,15 @@ class VisibleResourceRequestList extends React.Component {
 
   componentWillMount() {
       this.props.fetchResourceRequests();
-      this.requestHandler = setInterval(this.props.fetchResourceRequests,60000); //attempt to refresh data every 60 seconds
+      //this.requestHandler = setInterval(this.props.fetchResourceRequests,60000); //attempt to refresh data every 60 seconds
   }
-
+  /*
   componentWillUnmount() {
     if (this.requestHandler) {
         clearInterval(this.requestHandler);
     }
   }
-
+*/
   render() {
     const {isFetching, items, match} = this.props;
     //return (<RequestList items={items} isFetching={isFetching} baseUrl={match.url}/>);
@@ -52,7 +52,7 @@ const mapStateToProps = (state,ownProps) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-        fetchResourceRequests: () => { dispatch(fetchResourceRequests()) },
+        fetchResourceRequests: (forced,direction) => { dispatch(fetchResourceRequests(forced,direction)) },
         handleShowComment: (id) => { dispatch(showRequestComment(id)) },
         handleHideComment: () => { dispatch(hideRequestComment()) },
         handleAddComment: (id,text) => { return dispatch(addRequestComment(id,text)) },

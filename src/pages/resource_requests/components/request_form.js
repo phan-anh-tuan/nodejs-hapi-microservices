@@ -40,7 +40,7 @@ class ResourceRequestForm extends React.Component {
     componentWillMount() {
       //load the resource request by ID
       //console.log(`request_form: componentWillMount`);
-      this.props.fetchResourceRequest(this.props.id);
+      this.props.fetchResourceRequest(this.props.id).catch( error => alert(error.message));
     }
     
     shouldComponentUpdate(nextProps, nextState){

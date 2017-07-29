@@ -45,5 +45,10 @@
         "forIp": 50,
         "forIpAndUser": 7
     },
-    "projectName": "NTRR"
+    "projectName": "NTRR",
+    "pages" : {
+        "resource-requests" : {
+            "page-limit": 3
+        }
+    }
 }

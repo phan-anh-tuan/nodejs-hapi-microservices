@@ -1,6 +1,6 @@
 import { REQUEST_RESOURCE_REQUESTS, RECEIVE_RESOURCE_REQUESTS, REQUEST_RESOURCE_REQUEST, RECEIVE_RESOURCE_REQUEST, 
          RESET_ACTIVE_RESOURCE_REQUEST, CHANGE_RESOURCE_REQUEST, SHOW_REQUEST_COMMENT, HIDE_REQUEST_COMMENT,
-         SUBMIT_RESOURCE_REQUEST, RECEIVE_REQUEST_SUBMISSION, ADD_COMMENT_SUCCESSFULLY, CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY } from './actions';
+         SUBMIT_RESOURCE_REQUEST, RECEIVE_REQUEST_SUBMISSION, ADD_COMMENT_SUCCESSFULLY, CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY, SET_CURRENT_PAGE } from './actions';
 
 function populateActiveRequest(state, id, isFetching = false, isSubmitting = false, showComment = false  ) {
     let datas;
@@ -20,6 +20,8 @@ function populateActiveRequest(state, id, isFetching = false, isSubmitting = fal
 export function resourceRequests(state= {   isFetching: false,
             
                                             items: [], 
+                                            page: 1,
+                                            year: new Date().getFullYear(),
                                             activeRequest: {    isFetching: false, 
                                                                 isSubmitting: false,
                                                                 showComment: false,
@@ -36,20 +38,22 @@ export function resourceRequests(state= {   isFetching: false,
                                     updatedAt: Date.now()
                                 });
         case REQUEST_RESOURCE_REQUEST:
-            return populateActiveRequest(state, null, true, false, false)  
-            /*return Object.assign({},state,
+            //return populateActiveRequest(state, null, true, false, false)  
+            return Object.assign({},state,
                                 { activeRequest: { isFetching: true,
                                                    isSubmitting: false,
                                                    showComment: false,
                                                    data: {}}
-                                });*/
+                                });
         case RECEIVE_RESOURCE_REQUEST:
             
-            return populateActiveRequest(state, action.id, false, false, false)  
-            /*return Object.assign({},state,
+            //return populateActiveRequest(state, action.id, false, false, false)  
+            return Object.assign({},state,
                                 { activeRequest: { isFetching: false,
+                                                   isSubmitting: false,
+                                                   showComment: false,
                                                    data: action.data}
-                                });*/
+                                });
         case SHOW_REQUEST_COMMENT:
             return populateActiveRequest(state, action.id, false, false, true)  
         case HIDE_REQUEST_COMMENT:
@@ -75,6 +79,13 @@ export function resourceRequests(state= {   isFetching: false,
             const { data, ...rest} = JSON.parse(JSON.stringify(state.activeRequest));
             data[action.name] = action.value;
             return Object.assign({},state, { activeRequest: { data: data, ...rest} });
+        case SET_CURRENT_PAGE:
+            const currentPage = state.page;
+            if (action.direction !== '') {
+                return Object.assign({},state, { page: action.direction.toLowerCase() === 'next' ? currentPage + 1 : (currentPage > 1 ? currentPage - 1 : 1)  });
+            } else {
+                return state;
+            }
         case ADD_COMMENT_SUCCESSFULLY:
         case CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY:
             /*

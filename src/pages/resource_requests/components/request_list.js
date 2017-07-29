@@ -1,6 +1,6 @@
 import React from 'react';;
 import {Grid, Row, Col } from 'react-bootstrap';
-import { Button, FormControl, FormGroup, InputGroup, Form, ListGroup, ListGroupItem } from 'react-bootstrap'
+import { Button, FormControl, FormGroup, InputGroup, Form, ListGroup, ListGroupItem, Pager } from 'react-bootstrap'
 import Request from './request.js';
 import { LightboxModal } from '../../../components/react-lightbox.js'
 
@@ -12,6 +12,7 @@ class RequestList extends React.Component {
         super(props);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
+        this.handleGoToPage = this.handleGoToPage.bind(this);
     }
 
     handleSubmit(event) {
@@ -26,6 +27,18 @@ class RequestList extends React.Component {
 
     handleChange(event) {
         this.state = { text : event.target.value};
+    }
+
+    handleGoToPage(eventKey) {
+        switch (eventKey) {
+            case '1': //go to previous page
+                console.log(`resource-requests\components\request_list eventKey: ${eventKey}`)
+                this.props.fetchResourceRequests('previous')
+                break;
+            case '2':
+                this.props.fetchResourceRequests('next')
+                break;
+        }
     }
 
     render() {
@@ -69,6 +82,12 @@ class RequestList extends React.Component {
                             </Form>
                         </LightboxModal>
                     </Col>
+                </Row>
+                <Row className='show-grid'>
+                    <Pager onSelect={this.handleGoToPage}>
+                        <Pager.Item previous eventKey='1'>&larr; Previous</Pager.Item>
+                        <Pager.Item next eventKey='2'>Next &rarr;</Pager.Item>
+                    </Pager>
                 </Row>
             </div>
         )

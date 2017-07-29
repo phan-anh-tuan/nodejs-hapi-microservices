@@ -37,6 +37,8 @@ const initialState = {
           showComment: false,
           data: {}
       },
+      page: 1,
+      year: new Date().getFullYear(),
       updatedAt: Date.now()
     }
 }
