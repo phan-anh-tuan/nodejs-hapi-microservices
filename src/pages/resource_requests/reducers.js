@@ -1,6 +1,7 @@
 import { REQUEST_RESOURCE_REQUESTS, RECEIVE_RESOURCE_REQUESTS, REQUEST_RESOURCE_REQUEST, RECEIVE_RESOURCE_REQUEST, 
          RESET_ACTIVE_RESOURCE_REQUEST, CHANGE_RESOURCE_REQUEST, SHOW_REQUEST_COMMENT, HIDE_REQUEST_COMMENT,
          SUBMIT_RESOURCE_REQUEST, RECEIVE_REQUEST_SUBMISSION, ADD_COMMENT_SUCCESSFULLY, CLOSE_REQUEST_WITH_COMMENT_SUCCESSFULLY, SET_CURRENT_PAGE } from './actions';
+const ParseValidation = require('../../actions/helpers/parse-validation');
 
 function populateActiveRequest(state, id, isFetching = false, isSubmitting = false, showComment = false  ) {
     let datas;
@@ -25,9 +26,14 @@ export function resourceRequests(state= {   isFetching: false,
                                             activeRequest: {    isFetching: false, 
                                                                 isSubmitting: false,
                                                                 showComment: false,
+                                                                success: false,
+                                                                error: undefined,
+                                                                hasError: {},
+                                                                help: {},
                                                                 data: {}
                                                             }
                                         }, action) {
+    let validation = {}
     switch (action.type) {
         case REQUEST_RESOURCE_REQUESTS:
             return Object.assign({},state,{ isFetching: true });
@@ -43,16 +49,26 @@ export function resourceRequests(state= {   isFetching: false,
                                 { activeRequest: { isFetching: true,
                                                    isSubmitting: false,
                                                    showComment: false,
+                                                   success: false,
+                                                   error: undefined,
+                                                   hasError: {},
+                                                   help: {},
                                                    data: {}}
                                 });
         case RECEIVE_RESOURCE_REQUEST:
             
+            validation = ParseValidation(action.response);
+            
             //return populateActiveRequest(state, action.id, false, false, false)  
             return Object.assign({},state,
-                                { activeRequest: { isFetching: false,
-                                                   isSubmitting: false,
-                                                   showComment: false,
-                                                   data: action.data}
+                                { activeRequest: {  isFetching: false,
+                                                    isSubmitting: false,
+                                                    showComment: false,
+                                                    success: !validation.error && JSON.stringify(validation.hasError) === '{}',
+                                                    error: validation.error,
+                                                    hasError: validation.hasError,
+                                                    help: validation.help,
+                                                    data: (!validation.error && JSON.stringify(validation.hasError) === '{}') ? action.response : {}}
                                 });
         case SHOW_REQUEST_COMMENT:
             return populateActiveRequest(state, action.id, false, false, true)  
@@ -63,13 +79,30 @@ export function resourceRequests(state= {   isFetching: false,
             const { isSubmitting, ...props } = JSON.parse(JSON.stringify(state.activeRequest));
             return Object.assign({},state, { activeRequest: { isSubmitting: true, ...props} });
         case RECEIVE_REQUEST_SUBMISSION:
-            //check action.error and handle error properly
-            const { _isSubmitting, ..._props } = JSON.parse(JSON.stringify(state.activeRequest));
-            return Object.assign({},state, { activeRequest: { isSubmitting: false, ..._props} });
+            validation = ParseValidation(action.response);
+            const { data: _data, ..._props } = JSON.parse(JSON.stringify(state.activeRequest));
+            console.log(`resouce_requests reducers state: ${JSON.stringify(state.activeRequest)}`)
+            console.log(`resouce_requests reducers _data: ${JSON.stringify(_data)}`)
+            return Object.assign({},state, { activeRequest: {   isFetching: false,
+                                                                isSubmitting: false,
+                                                                showComment: false,
+                                                                success: !validation.error && JSON.stringify(validation.hasError) === '{}',
+                                                                error: validation.error,
+                                                                hasError: validation.hasError,
+                                                                help: validation.help,
+                                                                data: (!validation.error && JSON.stringify(validation.hasError) === '{}') ? action.response : _data
+                                                            }});
         case RESET_ACTIVE_RESOURCE_REQUEST:
             return Object.assign({},state,
-                                { activeRequest: { isFetching: false,
-                                                   data: {}}
+                                { activeRequest: {  isFetching: false,
+                                                    isSubmitting: false,
+                                                    showComment: false,
+                                                    success: true,
+                                                    error: undefined,
+                                                    hasError: {},
+                                                    help: {},
+                                                    data: {}
+                                                }
                                 });
         case CHANGE_RESOURCE_REQUEST:
             /************************************************************************************************

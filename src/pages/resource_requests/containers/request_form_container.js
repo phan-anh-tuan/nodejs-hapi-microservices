@@ -10,7 +10,11 @@ const mapStateToProps = (state,ownProps) => {
     id: ownProps.match.params.id,
     isFetching: state.resourceRequests.activeRequest.isFetching,
     isSubmitting: state.resourceRequests.activeRequest.isSubmitting,
-    data: state.resourceRequests.activeRequest.data
+    data: state.resourceRequests.activeRequest.data,
+    success: state.resourceRequests.activeRequest.success,
+    error: state.resourceRequests.activeRequest.error,
+    hasError: state.resourceRequests.activeRequest.hasError,
+    help: state.resourceRequests.activeRequest.help
     //data: datas.length >0 ? datas[0]: {}
   }
 }

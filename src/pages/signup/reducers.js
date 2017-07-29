@@ -17,7 +17,7 @@ export function accounts(state= {
             //console.log(`signup/reducers validation ${JSON.stringify(validation)}`);
             return Object.assign({}, state, {
                 loading: false,
-                success: !action.err,
+                success: !validation.error && JSON.stringify(validation.hasError) === '{}',
                 error: validation.error,
                 hasError: validation.hasError,
                 help: validation.help

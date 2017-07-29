@@ -32,10 +32,14 @@ const initialState = {
       isFetching: false,
       items: [],
       activeRequest: {
-          isFetching: false,
-          isSubmitting: false,
-          showComment: false,
-          data: {}
+        isFetching: false,
+        isSubmitting: false,
+        showComment: false,
+        success: false,
+        error: undefined,
+        hasError: {},
+        help: {},
+        data: {}
       },
       page: 1,
       year: new Date().getFullYear(),

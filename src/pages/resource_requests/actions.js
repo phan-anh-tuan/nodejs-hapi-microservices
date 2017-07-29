@@ -99,12 +99,12 @@ export function fetchResourceRequest(id) {
         return (dispatch,getState) => {
             dispatch(RequestResourceRequest());
             return fetch(`${ApiEndpoint}/resource/request/${id}`,options)
-                        .then( response => {
-                            if (response.status !== 200 ){
+                        .then( response => { 
+                            /*if (response.status !== 200 ){
                                 let error = new Error(response.statusText);
                                 error.response = response;
                                 throw(error);
-                            }
+                            }*/
                             return response.json()})
                         .then( json => {    
                             dispatch(ReceiveResourceRequest(json));
@@ -132,6 +132,7 @@ export function handleRequestDelete() {
                     },
                     credentials: 'same-origin'
                 }).then( response => {
+                    /*
                     if (response.status !== 200) {
                         let error = new Error(response.statusText);
                         error.response = response;
@@ -140,15 +141,18 @@ export function handleRequestDelete() {
                     } else {
                         
                         return response.json();
-                    }
+                    }*/
+                    return response.json();
                 }).then( json => { 
                                     //console.log('request succeeded with JSON response', json);
-                                    dispatch(receiveRequestSubmission());
-                                    return dispatch(fetchResourceRequests(true)); })
+                                    return dispatch(receiveRequestSubmission(json));
+                                    //return dispatch(fetchResourceRequests(true)); 
+                })
+                /*
                 .catch( (_error) => {
                     console.log('request fail with error message', error.message);
                     dispatch(receiveRequestSubmission(_error));
-                })
+                })*/
     }
 }
 
@@ -172,7 +176,7 @@ export function handleRequestSubmit() {
                     credentials: 'same-origin',
                     body: JSON.stringify(requestBody)
                 }).then( response => {
-                    if (response.status !== 200) {
+                    /*if (response.status !== 200) {
                         let error = new Error(response.statusText);
                         error.response = response;
                         dispatch(receiveRequestSubmission(error));
@@ -180,15 +184,17 @@ export function handleRequestSubmit() {
                     } else {
                         
                         return response.json();
-                    }
+                    }*/
+                    return response.json();
                 }).then( json => { 
-                                    console.log('request succeeded with JSON response', json);
-                                    dispatch(receiveRequestSubmission());
-                                    return dispatch(fetchResourceRequests(true)); })
-                .catch( (_error) => {
+                                    //console.log('request succeeded with JSON response', json);
+                                    return dispatch(receiveRequestSubmission(json));
+                                    //return dispatch(fetchResourceRequests(true)); 
+                })
+                /*.catch( (_error) => {
                     console.log('request fail with error message', error.message);
                     dispatch(receiveRequestSubmission(_error));
-                })
+                })*/
     }
 }
 /**
@@ -208,7 +214,7 @@ export function ReceiveResourceRequest(json) {
     //console.log(`resource_requests/actions.js receive request ${JSON.stringify(id)}`);
     return {
         type: RECEIVE_RESOURCE_REQUEST,
-        data: json
+        response: json
     }
 }
 
@@ -323,9 +329,10 @@ export function submitResourceRequest() {
     }
 }
 
-export function receiveRequestSubmission(_error = null) {
+export function receiveRequestSubmission(json) {
     return {
         type: RECEIVE_REQUEST_SUBMISSION,
-        error: _error
+        //error: _error
+        response: json
     }
 }

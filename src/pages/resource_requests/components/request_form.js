@@ -29,7 +29,8 @@ class ResourceRequestForm extends React.Component {
         this.state = { isBlocking: false }
     }
     componentWillReceiveProps(nextProps) {
-        //need to reset date
+        //need to reset data
+        
         if (nextProps.id === 'create' && !!nextProps.data._id) {
             //console.log(`request_form: componentWillReceiveProps - resetting data`);    
             this.props.fetchResourceRequest(nextProps.id);      
@@ -40,12 +41,13 @@ class ResourceRequestForm extends React.Component {
     componentWillMount() {
       //load the resource request by ID
       //console.log(`request_form: componentWillMount`);
-      this.props.fetchResourceRequest(this.props.id).catch( error => alert(error.message));
+      this.props.fetchResourceRequest(this.props.id)
+                                                   // .catch( error => alert(error.message));
     }
     
     shouldComponentUpdate(nextProps, nextState){
+        //console.log(`request_form nextState: ${JSON.stringify(nextProps)}`);
         if (nextProps.id === 'create' && !!nextProps.data._id) {
-            //console.log(`request_form: shouldComponentUpdate - resetting data, no re-rendering please`);
             return false;
         }
         return true;
@@ -61,11 +63,14 @@ class ResourceRequestForm extends React.Component {
         const isDelete = (this.props.location.state && this.props.location.state.isDelete) ? true : false;
         this.props.handleSubmit(isDelete).then( () => {  
                                                     //console.log(`request_form handleSubmit succeed`);
-                                                    this.props.history.push('/resource/request');
+                                                    if (this.props.success) {
+                                                        this.props.history.push('/resource/request');
+                                                    }
                                                 })
+                                /*
                                 .catch((error) => {
                                                     console.log('request_form handleSubmit fail with error message', error.message);
-                                                })
+                                                })*/
         e.preventDefault();
     }
 
@@ -74,6 +79,10 @@ class ResourceRequestForm extends React.Component {
         const isDisabled = (this.props.location.state && this.props.location.state.isDelete) ? true: false;
         let { accountName, resourceType, resourceRate, quantity, submissionDate, tentativeStartDate, fulfilmentDate, status } = this.props.data;
         const button = this.props.id !== 'create'? 'Update' : 'Create New';
+        const alerts = [];        
+        alerts.push(<div key="danger" className="alert alert-danger">
+                {this.props.error}
+            </div>);
         return (
             
             <Form horizontal>
@@ -93,6 +102,14 @@ class ResourceRequestForm extends React.Component {
                     </FormGroup>
                 }
                 { 
+                    this.props.error && 
+                      <FormGroup>
+                        <Col xsPush={1} xs={11} smOffset={2} sm={6}>
+                            {alerts}
+                        </Col>
+                    </FormGroup>
+                }
+                { 
                     (this.props.location.state && this.props.location.state.isDelete) && 
                     <FormGroup>
                         <Col componentClass={ControlLabel} xsPush={1} xs={11} sm={2}>
@@ -105,19 +122,19 @@ class ResourceRequestForm extends React.Component {
                         </Col>
                     </FormGroup>
                 }
-                <FieldGroup id="accountName" label="Account Name:" type="text" placeholder="Account Name" disabled={isDisabled} onChange={this.handleChange} value={!!accountName ? accountName: ''}/>
+                <FieldGroup id="accountName" label="Account Name:" type="text" placeholder="Account Name" disabled={isDisabled} onChange={this.handleChange} value={!!accountName ? accountName: ''} help={ this.props.help.accountName }/>
                 
-                <FieldGroup id="resourceType" label="Resource Type:" type="text" placeholder="Resource Type" disabled={isDisabled} onChange={this.handleChange} value={!!resourceType ? resourceType: ''}/>
+                <FieldGroup id="resourceType" label="Resource Type:" type="text" placeholder="Resource Type" disabled={isDisabled} onChange={this.handleChange} value={!!resourceType ? resourceType: ''} help={ this.props.help.resourceType }/>
                 
-                <FieldGroup id="resourceRate" label="Resource Rate:" type="text" placeholder="Resource Rate" disabled={isDisabled} onChange={this.handleChange} value={!!resourceRate ? resourceRate: 0}/>
+                <FieldGroup id="resourceRate" label="Resource Rate:" type="text" placeholder="Resource Rate" disabled={isDisabled} onChange={this.handleChange} value={!!resourceRate ? resourceRate: 0} help={ this.props.help.resourceRate }/>
                 
-                <FieldGroup id="quantity" label="Resource Quantity:" type="text" placeholder="Resource Quantity" disabled={isDisabled} onChange={this.handleChange} value={!!quantity ? quantity: 0}/>
+                <FieldGroup id="quantity" label="Resource Quantity:" type="text" placeholder="Resource Quantity" disabled={isDisabled} onChange={this.handleChange} value={!!quantity ? quantity: 0} help={ this.props.help.quantity }/>
 
-                <FieldGroup id="submissionDate" label="Submission Date:" type="date" placeholder="Submission Date" disabled={isDisabled} onChange={this.handleChange} value={!!submissionDate ? moment(submissionDate).format("YYYY-MM-DD") : ''}/>
+                <FieldGroup id="submissionDate" label="Submission Date:" type="date" placeholder="Submission Date" disabled={isDisabled} onChange={this.handleChange} value={!!submissionDate ? moment(submissionDate).format("YYYY-MM-DD") : ''} help={ this.props.help.submissionDate }/>
 
-                <FieldGroup id="tentativeStartDate" label="Start Date:" type="date" placeholder="Tentative Start Date" disabled={isDisabled} onChange={this.handleChange} value={!!tentativeStartDate ? moment(tentativeStartDate).format("YYYY-MM-DD") : ''}/>
+                <FieldGroup id="tentativeStartDate" label="Start Date:" type="date" placeholder="Tentative Start Date" disabled={isDisabled} onChange={this.handleChange} value={!!tentativeStartDate ? moment(tentativeStartDate).format("YYYY-MM-DD") : ''} help={ this.props.help.tentativeStartDate }/>
 
-                <FieldGroup id="fulfilmentDate" label="Fulfilment Date:" type="date" placeholder="Fulfilment Date" disabled={isDisabled} onChange={this.handleChange} value={!!fulfilmentDate ? moment(fulfilmentDate).format("YYYY-MM-DD") : ''}/>
+                <FieldGroup id="fulfilmentDate" label="Fulfilment Date:" type="date" placeholder="Fulfilment Date" disabled={isDisabled} onChange={this.handleChange} value={!!fulfilmentDate ? moment(fulfilmentDate).format("YYYY-MM-DD") : ''} help={ this.props.help.fulfilmentDate }/>
 
                 <FieldGroup id="status" label="Status:" componentClass="select" placeholder="Status" disabled={isDisabled} onChange={this.handleChange} value={!!status ? status : 'Open'}>
                     <option value="Open">Open</option>

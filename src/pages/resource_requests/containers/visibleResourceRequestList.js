@@ -40,7 +40,7 @@ function getVisibleRequests(requests, status) {
 }
 
 const mapStateToProps = (state,ownProps) => {
-    console.log(`visibleResourceRequestList comments ${state.resourceRequests.activeRequest.data.comments}`)
+    //console.log(`visibleResourceRequestList comments ${state.resourceRequests.activeRequest.data.comments}`)
     return {
         isFetching: state.resourceRequests.isFetching,
         items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
