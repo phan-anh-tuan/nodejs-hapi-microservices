@@ -29,7 +29,9 @@ export default class App extends React.Component {
             <NavigationBar>
               <Nav>
                   <NavItem eventKey={1} href="#">About</NavItem>
-                  <NavItem eventKey={2} href="#">Contact</NavItem>
+                  <li role="presentation">
+                    <a href="/contact">Contact</a>
+                  </li>
                   <li role="presentation">
                     <a href="/signup">Sign Up</a>
                   </li>

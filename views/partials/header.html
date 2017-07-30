@@ -147,7 +147,12 @@
                         submitIcon.click();
                     }
             });
-            inputBox.autocomplete({source: 'http://localhost:3000/api/resource/request/search'});        
+            inputBox.autocomplete({
+                source: `${window.location.origin}/api/resource/request/search`,
+                select: function( event, ui ) {
+                    window.location.href = `/resource/request/${ui.item.value}`;
+                }
+            });        
     });
 </script>
 </header>  

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, FormGroup, FormControl, Col, ControlLabel, Button, HelpBlock } from 'react-bootstrap'
+import { Form, FormGroup, FormControl, Col, ControlLabel, Button, HelpBlock, ListGroup, ListGroupItem } from 'react-bootstrap'
 import PropTypes from 'prop-types'
 import { Prompt } from 'react-router-dom'
 var moment = require('moment');
@@ -77,14 +77,22 @@ class ResourceRequestForm extends React.Component {
     render() {
         const { isBlocking } = this.state
         const isDisabled = (this.props.location.state && this.props.location.state.isDelete) ? true: false;
-        let { accountName, resourceType, resourceRate, quantity, submissionDate, tentativeStartDate, fulfilmentDate, status } = this.props.data;
+        let { accountName, comments, resourceType, resourceRate, quantity, submissionDate, tentativeStartDate, fulfilmentDate, status } = this.props.data;
         const button = this.props.id !== 'create'? 'Update' : 'Create New';
         const alerts = [];        
         alerts.push(<div key="danger" className="alert alert-danger">
                 {this.props.error}
             </div>);
+        
+        const commentListItems = [];
+        if (comments && comments.length > 0 ) {
+            comments.forEach((comment,i) => commentListItems.push(<ListGroupItem key={i}>{moment(comment.createdDate).format('MMMM Do YYYY')}<br/>{comment.text}</ListGroupItem>))
+        } else {
+            commentListItems.push(<ListGroupItem>There is no comment</ListGroupItem>)
+        }
+
         return (
-            
+        <div>    
             <Form horizontal>
                  <Prompt
                     when={isBlocking}
@@ -103,7 +111,7 @@ class ResourceRequestForm extends React.Component {
                 }
                 { 
                     this.props.error && 
-                      <FormGroup>
+                    <FormGroup>
                         <Col xsPush={1} xs={11} smOffset={2} sm={6}>
                             {alerts}
                         </Col>
@@ -153,6 +161,9 @@ class ResourceRequestForm extends React.Component {
                     </Col>
                 </FormGroup>
             </Form>
+            <p>Comments:</p>
+            <ListGroup>{commentListItems}</ListGroup> 
+        </div>
         )
     }
 }

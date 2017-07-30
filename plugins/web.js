@@ -64,6 +64,18 @@ internals.applyRoutes = function(server,next) {
             },
         }
     });
+
+     server.route({
+        method: 'GET',
+        path: '/contact/{path*}',
+        config: {
+            handler: function(request, reply) {
+                let context = { user: { role: 'user'},
+                                script: { url: '/assets/js/contact.js'} };
+                reply.view('index',context);
+            },
+        }
+    });
 /*
     server.route({
         method: 'GET',

@@ -18,7 +18,7 @@ Server((err,server) => {
                                             ],
                                            (error, result) => { console.log('30 second scheduled task finished execution!'); });
                             });
-                            schedule.scheduleJob('0 35 10 * * *', function(){
+                            schedule.scheduleJob('0 22 21 * * *', function(){
                                 console.log('Daily Scheduled task is executing!');
                                 Async.auto([  
                                                 notification.putOverdueRequestsInQueue,

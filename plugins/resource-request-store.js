@@ -72,7 +72,7 @@ exports.register = function(_server, options, next) {
             const ObjectID = internals.ObjectID;
             const regex = term.split(' ').join('.*')
             //console.log(`resource-request-store search term: ${regex}`)
-            const filter = { accountName: {$regex: regex, $options: 'i'}}
+            const filter = { $or : [{ accountName: {$regex: regex, $options: 'i'}}, {resourceType: {$regex: regex, $options: 'i'}}]}
 
             internals.getRequests(filter, {page:1, limit: -1}, (error,result) => {
                 if (error) {

@@ -13,8 +13,9 @@ import {
 
 import store from './store'
 import NavigationBar from '../../components/navigation-bar.js'
-import ReportPanel from './components/report-panel'
-import SearchBox from '../../components/search-box.js'
+import ContactForm from './components/contact-form'
+
+
 const _store = store()
 
 export default class App extends React.Component {
@@ -29,15 +30,16 @@ export default class App extends React.Component {
                   <li role="presentation">
                     <a href="/contact">Contact</a>
                   </li>
-                  <li role="presentation"><a href='/resource/request'>Resource Request</a></li>
+                  <li role="presentation">
+                    <a href="/signup">Sign Up</a>
+                  </li>
               </Nav>
               <Nav pullRight>
-                  <li role="presentation"><SearchBox/></li>
-                  <li role="presentation"><a href='/signin/signout'>Sign Out</a></li>
+                  <li role="presentation"><a href='/signin'>Sign In</a></li>
               </Nav>
             </NavigationBar>        
             <Switch>
-                <Route exact path="/report" component={ReportPanel} />
+                <Route exact path="/contact" component={ContactForm} />
             </Switch>
           </Col>
         </Router>

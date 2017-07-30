@@ -28,7 +28,9 @@ export default class App extends React.Component {
             <NavigationBar>
               <Nav onSelect={ (eventKey) => console.log(`resource_requests/app eventKey is clicked`)}>
                   <NavItem eventKey={1} href="#">About</NavItem>
-                  <NavItem eventKey={2} href="/contact">Contact</NavItem>
+                  <li role="presentation">
+                    <a href="/contact">Contact</a>
+                  </li>
                   <li role="presentation">
                     <Link to="/resource/request/create" style={{'backgroundColor':'#337ab7', 'borderColor':'#2e6da4', 'color':'#fff'}}>
                         Create
