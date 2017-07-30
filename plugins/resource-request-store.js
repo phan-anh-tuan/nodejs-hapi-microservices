@@ -66,6 +66,26 @@ exports.register = function(_server, options, next) {
             }
         };
 
+        internals.searchByTerm = function(term, callback) {
+            
+            const requests = internals.db.collection('resource_requests');
+            const ObjectID = internals.ObjectID;
+            const regex = term.split(' ').join('.*')
+            //console.log(`resource-request-store search term: ${regex}`)
+            const filter = { accountName: {$regex: regex, $options: 'i'}}
+
+            internals.getRequests(filter, {page:1, limit: -1}, (error,result) => {
+                if (error) {
+                    return callback(error)
+                }
+                const retVal = result.map((request) => {
+                    return { label: `${request.accountName} - ${request.quantity} ${request.resourceType}`,
+                             value: request._id}
+                })
+                callback(null,retVal);
+            })
+        };
+
         internals.getRequestByID = function(requestId,callback) {
             
             const requests = internals.db.collection('resource_requests');
@@ -240,6 +260,30 @@ exports.register = function(_server, options, next) {
                                                 })
                     },
                     description: 'Retrieve a list of resource requests',
+                    tags: ['api']
+                }
+            },
+             {
+                method: 'GET',
+                path: '/resource/request/search',
+                config: {
+                    auth: {
+                        strategy: 'session',
+                        scope: 'account'
+                    },
+                    validate: {
+                                headers: true,
+                                query: {
+                                    term: Joi.string().required()
+                                },
+                    },
+                    handler: function(request, reply) {
+                            internals.searchByTerm(request.query.term,(err,r_request) => {
+                                                    if (err) { reply(Boom.notFound(err)); }
+                                                    reply(null, r_request);
+                                                })
+                    },
+                    description: 'Search for resource requests by term',
                     tags: ['api']
                 }
             },
@@ -505,7 +549,8 @@ exports.register = function(_server, options, next) {
                         createRequest: internals.createRequest,
                         addRequestComment: internals.addRequestComment,
                         closeRequestWithComment: internals.closeRequestWithComment,
-                        checkOwnership: internals.checkOwnership
+                        checkOwnership: internals.checkOwnership,
+                        searchByTerm: internals.searchByTerm
                     });
         next();
     });

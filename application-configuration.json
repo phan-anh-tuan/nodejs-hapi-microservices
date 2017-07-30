@@ -37,9 +37,7 @@
             "address": "tuan.phananh@harveynash.com.au"
         }
     },
-    "resource-request": {
-        "overdue-duration": 14
-    },
+    
     "cookieSecret": "!k3yb04rdK4tz~4qu4~k3yb04rdd0gz!",
     "authAttempts": {
         "forIp": 50,
@@ -48,7 +46,9 @@
     "projectName": "NTRR",
     "pages" : {
         "resource-requests" : {
-            "page-limit": 3
+            "page-limit": 3,
+            "overdue-duration": 14,
+            "unattended-duration": 2
         }
     }
 }
