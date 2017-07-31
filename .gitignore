@@ -2,3 +2,4 @@
 /public/js
 *.log
 application-configuration.json
+/src/pages/api-endpoint.js
