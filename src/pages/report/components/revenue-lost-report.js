@@ -43,7 +43,8 @@ class RevenueLostReport extends React.Component {
             const fulfilmentDate = (request.fulfilmentDate) ? moment(request.fulfilmentDate) : moment();
             
             let start = submissionDate.clone();
-            if (start.clone().add(1,'months') < fulfilmentDate) {
+            //if (start.clone().add(1,'months') < fulfilmentDate) {
+            if (start.month() < fulfilmentDate.month()) {
                 while(start < fulfilmentDate) {
                     const end = start.endOf('month')
                     const working_days = workday_count(submissionDate, end);
