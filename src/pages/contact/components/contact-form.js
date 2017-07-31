@@ -71,7 +71,7 @@ class ContactForm extends React.Component {
                 }
                 <FieldGroup id="name" label="Name:" type="text" placeholder="Account Name" onChange={this.handleChange} value={ this.state.name || ''} help={ this.props.help.name }/>
                 <FieldGroup id="email" label="Email:" type="email" placeholder="Email" onChange={this.handleChange} value={ this.state.email || ''} help={ this.props.help.email }/>
-                <FieldGroup id="message" label="Message:" type="textarea" placeholder="Message" onChange={this.handleChange} value={ this.state.message || ''} help={ this.props.help.message }/>
+                <FieldGroup id="message" label="Message:" componentClass="textarea" placeholder="Message" onChange={this.handleChange} value={ this.state.message || ''} help={ this.props.help.message }/>
 
                 <FormGroup>
                     <Col xsPush={1} xs={11} smOffset={2} sm={6}>

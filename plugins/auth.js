@@ -16,6 +16,7 @@ internals.applyStrategy = function (server, next) {
         password: nconf.get('cookieSecret'),
         cookie: 'sid-ntrr',
         isSecure: false,
+        isHttpOnly: false,
         redirectTo: '/signin',
         appendNext: 'returnUrl',
         validateFunc: function (request, data, callback) {

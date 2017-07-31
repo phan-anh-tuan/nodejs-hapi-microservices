@@ -66,14 +66,18 @@ exports.register = function(_server, options, next) {
             }
         };
 
-        internals.searchByTerm = function(term, callback) {
-            
+        internals.searchByTerm = function(document, callback) {
+            const {term, user} = document
             const requests = internals.db.collection('resource_requests');
             const ObjectID = internals.ObjectID;
             const regex = term.split(' ').join('.*')
-            //console.log(`resource-request-store search term: ${regex}`)
-            const filter = { $or : [{ accountName: {$regex: regex, $options: 'i'}}, {resourceType: {$regex: regex, $options: 'i'}}]}
-
+            let filter;
+            if (user._id) {
+                filter = { $and: [{'owner.id': new ObjectID(user._id)},{ $or : [{ accountName: {$regex: regex, $options: 'i'}}, {resourceType: {$regex: regex, $options: 'i'}}]}]}
+            } else {
+                filter = { $or : [{ accountName: {$regex: regex, $options: 'i'}}, {resourceType: {$regex: regex, $options: 'i'}}]}
+            }
+            //const filter = { $and: [{'owner.id': new ObjectID(request.auth.credentials.user._id)},{ $or : [{ accountName: {$regex: regex, $options: 'i'}}, {resourceType: {$regex: regex, $options: 'i'}}]}]}
             internals.getRequests(filter, {page:1, limit: -1}, (error,result) => {
                 if (error) {
                     return callback(error)
@@ -278,7 +282,10 @@ exports.register = function(_server, options, next) {
                                 },
                     },
                     handler: function(request, reply) {
-                            internals.searchByTerm(request.query.term,(err,r_request) => {
+
+                            internals.searchByTerm({ term: request.query.term,
+                                                     user: request.auth.credentials.user},
+                                                    (err,r_request) => {
                                                     if (err) { reply(Boom.notFound(err)); }
                                                     reply(null, r_request);
                                                 })
