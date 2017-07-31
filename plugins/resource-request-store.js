@@ -407,7 +407,7 @@ exports.register = function(_server, options, next) {
                                                                 }
                                                             };
                                                             const template = 'new-resource-request';
-                                                            const context = { request_url: `http://${nconf.get('web-server:host')}:${nconf.get('web-server:port')}/resource/request/${r_request}`}
+                                                            const context = { request_url: `http://${nconf.get('web-client:base-url')}/resource/request/${r_request}`}
                                                             const taskDetail = {
                                                                 type: 'email',
                                                                 data: {
