@@ -482,12 +482,14 @@ exports.register = function(_server, options, next) {
                         },
                         query: false
                     },
-                    pre: [{
-                        assign: 'ownerCheck',
-                        method: function (request, reply) {
-                            internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                    pre: [
+                        {
+                            assign: 'ownerCheck',
+                            method: function (request, reply) {
+                                internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                            }
                         }
-                    }],
+                    ],
                     description: 'Close a request with comment' ,
                     tags: ['api']
                 },
@@ -516,8 +518,8 @@ exports.register = function(_server, options, next) {
                             _id: Joi.string().required(),
                             accountName: Joi.string().required(),
                             resourceType: Joi.string().required(),
-                            resourceRate: Joi.number().required(),
-                            quantity: Joi.number().required(),
+                            resourceRate: Joi.number().positive().required(),
+                            quantity: Joi.number().positive().required(),
                             submissionDate: Joi.date(),
                             tentativeStartDate: Joi.date(),
                             fulfilmentDate: Joi.date(),
@@ -526,11 +528,26 @@ exports.register = function(_server, options, next) {
                         query: false
                     },
                     pre: [{
-                        assign: 'ownerCheck',
-                        method: function (request, reply) {
-                            internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                            assign: 'ownerCheck',
+                            method: function (request, reply) {
+                                internals.checkOwnership({ documentId: request.payload._id, userId: request.auth.credentials.user._id},reply)                       
+                            }
+                        },
+                        {
+                            assign: 'dataCheck',
+                            method: function (request, reply) {
+                                const submissionDate = (request.payload.submissionDate) ? moment(request.payload.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() 
+                                const tentativeStartDate = (request.payload.tentativeStartDate) ? moment(request.payload.tentativeStartDate,'DD/MM/YYYY').valueOf() : Date.now() 
+                                const fulfilmentDate = (request.payload.fulfilmentDate) ? moment(request.payload.fulfilmentDate,'DD/MM/YYYY').valueOf() : Date.now() 
+                                
+                                if (submissionDate <= tentativeStartDate && tentativeStartDate <= fulfilmentDate) {
+                                    return reply(null,true)
+                                } else {
+                                    return reply(Boom.badData('submissionDate <= tentativeStartDate <= fulfilmentDate'));
+                                }
+                            }
                         }
-                    }],
+                    ],
                     description: 'Update a resource request',
                     tags: ['api']
                 },
