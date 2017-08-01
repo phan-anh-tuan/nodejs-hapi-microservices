@@ -232,6 +232,19 @@ exports.register = function(_server, options, next) {
             }) 
         }
 
+        internals.dataCheck = function(condition, callback){
+            const {submissionDate, tentativeStartDate, fulfilmentDate} = condition;
+            const s_date = (submissionDate) ? moment(submissionDate,'DD/MM/YYYY').valueOf() : Date.now() 
+            const ts_Date = (tentativeStartDate) ? moment(tentativeStartDate,'DD/MM/YYYY').valueOf() : Date.now() 
+            const f_date = (fulfilmentDate) ? moment(fulfilmentDate,'DD/MM/YYYY').valueOf() : Date.now() 
+            
+            if (s_date <= ts_Date && ts_Date <= f_date) {
+                return callback(null,true)
+            } else {
+                return callback(Boom.badData('submissionDate <= tentativeStartDate <= fulfilmentDate'));
+            }
+        }
+
         server.route([
             {
                 method: 'GET',
@@ -375,8 +388,8 @@ exports.register = function(_server, options, next) {
                         payload: {
                             accountName: Joi.string().required(),
                             resourceType: Joi.string().required(),
-                            resourceRate: Joi.number().required(),
-                            quantity: Joi.number().required(),
+                            resourceRate: Joi.number().positive().required(),
+                            quantity: Joi.number().positive().required(),
                             submissionDate: Joi.date().optional(),
                             tentativeStartDate: Joi.date().optional(),
                             fulfilmentDate: Joi.date().optional(),
@@ -384,7 +397,18 @@ exports.register = function(_server, options, next) {
                         },
                         query: false
                     },
-                    handler: function(request, reply) 
+                    pre: [
+                        {
+                            assign: 'dataCheck',
+                            method: function (request, reply) {
+                                internals.dataCheck ( { submissionDate: request.payload.submissionDate,tentativeStartDate: request.payload.tentativeStartDate,fulfilmentDate: request.payload.fulfilmentDate} , reply)
+                            }
+                        }
+                    ],
+                    description: 'Create a resource request' ,
+                    tags: ['api']
+                },
+                handler: function(request, reply) 
                                 {
                                 const user = request.auth.credentials.user;
                                 const requestDetails = Object.assign({},request.payload,{ owner: { id: user._id, email: user.email, name: user.roles.account.name}});
@@ -425,10 +449,11 @@ exports.register = function(_server, options, next) {
                                                             })
                                                         })
                                 },
-                    description: 'Create a resource request' ,
-                    tags: ['api']
-                }
+                 
             },
+
+
+
             {
                 method: 'POST',
                 path: '/resource/request/comment',
@@ -536,15 +561,7 @@ exports.register = function(_server, options, next) {
                         {
                             assign: 'dataCheck',
                             method: function (request, reply) {
-                                const submissionDate = (request.payload.submissionDate) ? moment(request.payload.submissionDate,'DD/MM/YYYY').valueOf() : Date.now() 
-                                const tentativeStartDate = (request.payload.tentativeStartDate) ? moment(request.payload.tentativeStartDate,'DD/MM/YYYY').valueOf() : Date.now() 
-                                const fulfilmentDate = (request.payload.fulfilmentDate) ? moment(request.payload.fulfilmentDate,'DD/MM/YYYY').valueOf() : Date.now() 
-                                
-                                if (submissionDate <= tentativeStartDate && tentativeStartDate <= fulfilmentDate) {
-                                    return reply(null,true)
-                                } else {
-                                    return reply(Boom.badData('submissionDate <= tentativeStartDate <= fulfilmentDate'));
-                                }
+                                internals.dataCheck ( { submissionDate: request.payload.submissionDate,tentativeStartDate: request.payload.tentativeStartDate,fulfilmentDate: request.payload.fulfilmentDate} , reply)
                             }
                         }
                     ],
