@@ -61,6 +61,7 @@
     "randomatic": "^1.1.7",
     "react": "^15.6.1",
     "react-bootstrap": "^0.31.0",
+    "react-bootstrap-modal": "^3.0.1",
     "react-dom": "^15.6.1",
     "react-redux": "^5.0.5",
     "react-router": "^4.1.1",

@@ -52,6 +52,8 @@ export default class App extends React.Component {
                   {sid.length ===0 && <li role="presentation">
                     <a href="/signup">Sign Up</a>
                   </li>}
+                  {sid.length > 0 &&<li role="presentation"><a style={{'backgroundColor':'#337ab7', 'borderColor':'#2e6da4', 'color':'#fff'}} href='/resource/request/create'>Create</a></li>}
+                  {sid.length > 0 &&<li role="presentation"><a href='/report'>Report</a></li>}
               </Nav>
               <Nav pullRight>
                   {sid.length ===0 && <li role="presentation"><a href='/signin'>Sign In</a></li>}

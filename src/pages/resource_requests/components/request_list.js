@@ -3,7 +3,7 @@ import {Grid, Row, Col } from 'react-bootstrap';
 import { Button, FormControl, FormGroup, InputGroup, Form, ListGroup, ListGroupItem, Pager } from 'react-bootstrap'
 import Request from './request.js';
 import { LightboxModal } from '../../../components/react-lightbox.js'
-
+var Modal = require('react-bootstrap-modal')
 var moment = require('moment')
 
 class RequestList extends React.Component {
@@ -13,6 +13,7 @@ class RequestList extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleGoToPage = this.handleGoToPage.bind(this);
+        this.state = { open: false}
     }
 
     handleSubmit(event) {
@@ -62,13 +63,27 @@ class RequestList extends React.Component {
                                 }) 
         }
         { if (isFetching) { gridStyle = {opacity: 0.5} } }
+       
         return (
             <div style={gridStyle}>
                 {isFetching && <Row className='show-grid'><Col sm={12}><h2>Loading.....</h2></Col></Row>}
                 {rows}
                 <Row className='show-grid'>
-                    <Col sm={12}>
-                        <LightboxModal display={this.props.showComment} closeLightbox={this.props.handleHideComment}>
+                    <Pager onSelect={this.handleGoToPage}>
+                        <Pager.Item previous eventKey='1'>&larr; Previous</Pager.Item>
+                        <Pager.Item next eventKey='2'>Next &rarr;</Pager.Item>
+                    </Pager>
+                </Row>
+                <Row className='show-grid'>
+                    
+                    <Modal
+                        show={this.props.showComment}
+                        onHide={this.props.handleHideComment}
+                        aria-labelledby="ModalHeader">
+                        <Modal.Header closeButton>
+                            <Modal.Title id='ModalHeader'>Comments</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
                             <ListGroup>
                                 {_comments.length > 0? _comments : 'There is no comments'}
                             </ListGroup>
@@ -82,14 +97,11 @@ class RequestList extends React.Component {
                                     </InputGroup>
                                 </FormGroup>
                             </Form>
-                        </LightboxModal>
-                    </Col>
-                </Row>
-                <Row className='show-grid'>
-                    <Pager onSelect={this.handleGoToPage}>
-                        <Pager.Item previous eventKey='1'>&larr; Previous</Pager.Item>
-                        <Pager.Item next eventKey='2'>Next &rarr;</Pager.Item>
-                    </Pager>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Modal.Dismiss className='btn btn-default'>Close</Modal.Dismiss>
+                        </Modal.Footer>
+                    </Modal>
                 </Row>
             </div>
         )

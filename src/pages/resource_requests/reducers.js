@@ -14,7 +14,11 @@ function populateActiveRequest(state, id, isFetching = false, isSubmitting = fal
                                 { activeRequest: { isFetching: isFetching,
                                                    isSubmitting: isSubmitting,
                                                    showComment: showComment,  
-                                                   data: datas.length >0 ? datas[0]: {}}
+                                                   data: datas.length >0 ? datas[0]: {},
+                                                   success: false,
+                                                   error: undefined,
+                                                   hasError: {},
+                                                   help: {}}
                                 });
 }
 
