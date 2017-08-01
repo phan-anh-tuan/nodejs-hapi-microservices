@@ -64,14 +64,16 @@ class RequestList extends React.Component {
         }
         { if (isFetching) { gridStyle = {opacity: 0.5} } }
        
+        const previous_disabled = this.props.page <= 1
+        const next_disabled = rows.length < 1
         return (
             <div style={gridStyle}>
                 {isFetching && <Row className='show-grid'><Col sm={12}><h2>Loading.....</h2></Col></Row>}
                 {rows}
                 <Row className='show-grid'>
                     <Pager onSelect={this.handleGoToPage}>
-                        <Pager.Item previous eventKey='1'>&larr; Previous</Pager.Item>
-                        <Pager.Item next eventKey='2'>Next &rarr;</Pager.Item>
+                        <Pager.Item previous eventKey='1' disabled={previous_disabled}>&larr; Previous</Pager.Item>
+                        <Pager.Item next eventKey='2' disabled={next_disabled}>Next &rarr;</Pager.Item>
                     </Pager>
                 </Row>
                 <Row className='show-grid'>

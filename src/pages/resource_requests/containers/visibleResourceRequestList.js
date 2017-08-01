@@ -45,7 +45,8 @@ const mapStateToProps = (state,ownProps) => {
         isFetching: state.resourceRequests.isFetching,
         items: getVisibleRequests(state.resourceRequests.items, ownProps.status || 'All'),
         showComment: state.resourceRequests.activeRequest.showComment,
-        comments: state.resourceRequests.activeRequest.data.comments || []
+        comments: state.resourceRequests.activeRequest.data.comments || [],
+        page: state.resourceRequests.page
     }
 }
 
