@@ -25,7 +25,7 @@ export default class App extends React.Component {
       <Provider store={store}>
         <Router>
           <Col sm={12}>
-            <NavigationBar>
+            <NavigationBar showSearchBox={true}>
               <Nav onSelect={ (eventKey) => console.log(`resource_requests/app eventKey is clicked`)}>
                   <NavItem eventKey={1} href="#">About</NavItem>
                   <li role="presentation">

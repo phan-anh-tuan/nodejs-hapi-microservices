@@ -111,6 +111,13 @@
     .modal-open .modal { 
         display: block !important;
     }
+    .search-container {
+        float:right;
+        position: relative;
+        top: -42px;
+        right: 45px;
+        height: 0;
+    }
 </style>
 <link href="/assets/css/jquery-ui.css" rel="stylesheet">
 <!--script
@@ -155,6 +162,14 @@
                     window.location.href = `/resource/request/${ui.item.value}`;
                 }
             });        
+            $('.searchbox-input-small').autocomplete({
+                source: `${window.location.origin}/api/resource/request/search`,
+                select: function( event, ui ) {
+                    window.location.href = `/resource/request/${ui.item.value}`;
+                }
+            });        
+            
     });
+
 </script>
 </header>  

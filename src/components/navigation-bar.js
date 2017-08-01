@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navbar, Nav, NavItem } from 'react-bootstrap'
+import { Navbar, Nav, NavItem, Col, FormControl  } from 'react-bootstrap'
 
 import PropTypes from 'prop-types'
 
@@ -13,6 +13,9 @@ class NavigationBar extends React.Component {
                     </Navbar.Brand>
                     <Navbar.Toggle />
                 </Navbar.Header>
+                { this.props.showSearchBox && <Col className='search-container' xs={8} lgHidden>
+                    <FormControl type="text" placeholder="Enter some keyword..." name="search" className="searchbox-input-small"/>
+                </Col>}
                 <Navbar.Collapse>
                     {this.props.children}
                 </Navbar.Collapse>
