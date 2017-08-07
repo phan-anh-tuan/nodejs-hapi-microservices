@@ -184,7 +184,7 @@ internals.applyRoutes = function (server, next) {
                     };
                     const template = 'forgot-password';
                     const context = {
-                        baseHref: nconf.get('web-server:protocol') + nconf.get('web-server:host') + (nconf.get('web-server:port') !== 80? ":" + nconf.get('web-server:port') : '') + '/signin/reset',
+                        baseHref: nconf.get('web-client:base-url') + '/signin/reset',
                         email: results.user.email,
                         key: results.keyHash.key
                     };
