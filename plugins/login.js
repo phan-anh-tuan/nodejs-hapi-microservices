@@ -4,7 +4,7 @@ const Bcrypt = require('bcrypt');
 const Boom = require('boom');
 const nconf = require('nconf');
 const Joi = require('joi');
-
+const AWS = require('aws-sdk');
 
 const internals = {};
 
@@ -114,6 +114,104 @@ internals.applyRoutes = function (server, next) {
             };
 
             request.cookieAuth.set(result);
+            /***********************************************************************************************************
+                get AWS Cognito OpenID Connect Token that client component can use to exchange for temporary credential
+            ************************************************************************************************************/
+            AWS.config.update({region: 'ap-southeast-2'});
+            AWS.config.apiVersions = {
+                cognitoidentity: '2014-06-30',
+                // other service API versions
+            };
+            /*
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'ap-southeast-2:e6f7fca1-bdf4-45dd-b783-951e03fa6c43',
+            });
+            */
+
+            const cognitoidentity = new AWS.CognitoIdentity();
+            const identityPoolId = 'ap-southeast-2:e6f7fca1-bdf4-45dd-b783-951e03fa6c43';
+            var params = {
+                IdentityPoolId: identityPoolId, /* required */
+                Logins: { /* required */
+                    'NTRR': JSON.stringify({id : request.pre.user._id,
+                                            name: request.pre.user.name,
+                                            email: request.pre.user.email,
+                                            roles: request.pre.user.roles,
+                                        }),
+                },
+                IdentityId: null 
+            };
+            cognitoidentity.getOpenIdTokenForDeveloperIdentity(params, function(err, data) {
+                if (err) console.log(err, err.stack); // an error occurred
+                else {
+                    console.log(`plugins/login.js retVal from getOpenIdTokenForDeveloperIdentity ${JSON.stringify(data)}`); 
+                    /*
+                    params = {
+                        IdentityId: data.IdentityId, 
+                        Logins: {
+                            'cognito-identity.amazonaws.com': data.Token
+                        }
+                    };
+*/
+
+
+                    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+
+                        // either IdentityPoolId or IdentityId is required
+                        // See the IdentityPoolId param for AWS.CognitoIdentity.getID (linked below)
+                        // See the IdentityId param for AWS.CognitoIdentity.getCredentialsForIdentity
+                        // or AWS.CognitoIdentity.getOpenIdToken (linked below)
+                            IdentityPoolId: identityPoolId,
+                            IdentityId: data.IdentityId,
+                            // optional tokens, used for authenticated login
+                            // See the Logins param for AWS.CognitoIdentity.getID (linked below)
+                            Logins: {
+                                'cognito-identity.amazonaws.com': data.Token
+                            },
+                        }, {
+                        // optionally provide configuration to apply to the underlying service clients
+                        // if configuration is not provided, then configuration will be pulled from AWS.config
+
+                        // region should match the region your identity pool is located in
+                        region: 'ap-southeast-2',
+
+                        // specify timeout options
+                        httpOptions: {
+                            timeout: 100
+                        }
+                    });
+
+/*
+                    cognitoidentity.getCredentialsForIdentity(params, function(error, result) {
+                        if (error) console.log(error, error.stack); // an error occurred
+                        else     
+                        {
+                            const credentials = result.Credentials; 
+*/
+                            var albumBucketName = 'ntrr';
+                            var s3 = new AWS.S3({
+                                apiVersion: '2006-03-01',
+                                params: {Bucket: albumBucketName},
+//                                credentials: credentials
+                            });
+
+                            s3.listObjects({Prefix: 'emails'}, function(_err, _data) {
+                                if (_err) {
+                                    return console.log(_err, _err.stack)
+                                } else {
+                                    console.log(`plugins/login.js retVal from s3.listObjects ${JSON.stringify(_data)}`)
+                                }
+                            })
+/*                        }
+                    });
+  */
+                }
+            });
+            
+            
+            /******
+             * End AWS
+             */
             reply(result);
         }
     });

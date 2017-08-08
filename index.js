@@ -11,12 +11,13 @@ Server((err,server) => {
                            
                             const notification = new Notification(server);
                             schedule.scheduleJob('*/30 * * * * *', function(){
-                               console.log('30 second scheduled task is executing!');
+                               //console.log('30 second scheduled task is executing!');
                                 Async.series([  
                                            //     notification.putOverdueRequestsInQueue,
                                                 notification.sendTaskCreationEmail
                                             ],
-                                           (error, result) => { console.log('30 second scheduled task finished execution!'); });
+                                           (error, result) => { //console.log('30 second scheduled task finished execution!'); 
+                                        });
                             });
                             schedule.scheduleJob('0 22 21 * * *', function(){
                                 console.log('Daily Scheduled task is executing!');
