@@ -269,6 +269,7 @@
             socket.on('chat message', function(msg){
               $('#messages').append($('<li>').html('<strong>'+msg.agent+':</strong>&nbsp;<span>'+msg.message+'</span'));
               $('.pesan_chat').scrollTop($('.pesan_chat')[0].scrollHeight);
+              notifyMe(msg.message);
               //window.scrollTo(0, document.body.scrollHeight);
             });
             
@@ -279,5 +280,31 @@
     /**
         function popup(o){var t=650,n=400,e=(screen.width-t)/2,i=(screen.height-n)/2,s="width="+t+", height="+n;return s+=", top="+i+", left="+e,s+=", directories=no",s+=", location=no",s+=", menubar=no",s+=", resizable=no",s+=", scrollbars=no",s+=", status=no",s+=", toolbar=no",newwin=window.open(o,"windowname5",s),window.focus&&newwin.focus(),!1};
     **/
+
+    function notifyMe(msg) {
+        // Let's check if the browser supports notifications
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notification");
+        }
+
+        // Let's check whether notification permissions have already been granted
+        else if (Notification.permission === "granted") {
+            // If it's okay let's create a notification
+            var notification = new Notification(msg);
+        }
+
+        // Otherwise, we need to ask the user for permission
+        else if (Notification.permission !== "denied") {
+            Notification.requestPermission(function (permission) {
+            // If the user accepts, let's create a notification
+            if (permission === "granted") {
+                var notification = new Notification(msg);
+            }
+            });
+        }
+
+        // At last, if the user has denied notifications, and you 
+        // want to be respectful there is no need to bother them any more.
+        }
 </script>
 </header>  
