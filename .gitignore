@@ -1,5 +1,6 @@
 /node_modules
 /public/js
 *.log
+*.txt
 application-configuration.json
 /src/pages/api-endpoint.js
