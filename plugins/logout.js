@@ -42,7 +42,7 @@ internals.applyRoutes = function (server, next) {
                 
                 if (server.plugins['login'].onlines.has(credentials.user._id.toString())) {
                     server.plugins['login'].onlines.delete(credentials.user._id.toString())
-                      server.plugins['socket-io'].chat.emit('chat message', { agent: credentials.user.username,
+                      server.plugins['socket-io'].io.emit('chat:messages:latest', { agent: credentials.user.username,
                                                                                 message: 'offline'});
                 }
 

@@ -255,23 +255,8 @@
                 }
             });        
 
-
-            var socket = io.connect(`${window.location.origin}/chat`);
-            $('form.chat').submit(function(){
-              socket.emit('chat message', 
-                {
-                  agent: navigator.userAgent,
-                  message: $('#m').val()
-                });
-              $('#m').val('');
-              return false;
-            });
-            socket.on('chat message', function(msg){
-              $('#messages').append($('<li>').html('<strong>'+msg.agent+':</strong>&nbsp;<span>'+msg.message+'</span'));
-              $('.pesan_chat').scrollTop($('.pesan_chat')[0].scrollHeight);
-              notifyMe(msg.message);
-              //window.scrollTo(0, document.body.scrollHeight);
-            });
+            
+            
             
     });
   

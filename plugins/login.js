@@ -116,8 +116,8 @@ internals.applyRoutes = function (server, next) {
             request.cookieAuth.set(result);
             if (!internals.onlines.has(request.pre.user._id.toString())) {
                 internals.onlines.set(request.pre.user._id.toString(),1)
-                server.plugins['socket-io'].chat.emit('chat message', { agent: request.pre.user.username,
-                                                                        message: 'online'});
+                server.plugins['socket-io'].io.emit('chat:messages:latest', { from: request.pre.user.username,
+                                                                                message: 'online'});
             }
             
             reply(result);

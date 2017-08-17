@@ -102,8 +102,11 @@ internals.applyRoutes = function(server,next) {
                 scope: 'account'
             },
             handler: function(request, reply) {
-                let context = { user: { role: 'user'},
-                                script: { url: '/assets/js/bundle.js'} };
+                let context = { user: { role: 'user',
+                                        token: request.auth.credentials.user._id,
+                                        name: request.auth.credentials.user.username},
+                                script: { url: '/assets/js/bundle.js'},
+                                isAuthenticated: true };
                 reply.view('index', context);
             }
         }
