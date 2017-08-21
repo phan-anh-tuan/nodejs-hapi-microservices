@@ -57,6 +57,10 @@ internals.applyRoutes = function(server,next) {
         method: 'GET',
         path: '/report/{path*}',
         config: {
+            auth: {
+                strategy: 'session',
+                scope: 'account'
+            },
             handler: function(request, reply) {
                 let context = { user: { role: 'user'},
                                 script: { url: '/assets/js/report.js'} };
@@ -65,7 +69,19 @@ internals.applyRoutes = function(server,next) {
         }
     });
 
-     server.route({
+    server.route({
+        method: 'GET',
+        path: '/chat/{path*}',
+        config: {
+            handler: function(request, reply) {
+                let context = { user: { role: 'user'},
+                                script: { url: '/assets/js/chat.js'} };
+                reply.view('index',context);
+            },
+        }
+    });
+
+    server.route({
         method: 'GET',
         path: '/contact/{path*}',
         config: {
