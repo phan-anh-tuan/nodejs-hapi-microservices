@@ -23,6 +23,7 @@ exports.register = function (server, options, next) {
     //internals.chat = internals.io.of('/chat').on('connection', function(socket) {
     io.on('connection', function(socket) {
         socket.on('io:message', function(msg){
+            console.log(`plugins/socket-io receive message ${JSON.stringify(msg)}`) 
             const {from, to, message} = msg
             io.to(to).emit('chat:messages:latest', msg);
         });

@@ -73,8 +73,15 @@ internals.applyRoutes = function(server,next) {
         method: 'GET',
         path: '/chat/{path*}',
         config: {
+            auth: {
+                strategy: 'session',
+                scope: 'account'
+            },
             handler: function(request, reply) {
-                let context = { user: { role: 'user'},
+                let context = { user: { role: 'user',
+                                        token: request.auth.credentials.user._id,
+                                        name: request.auth.credentials.user.username,
+                                },
                                 script: { url: '/assets/js/chat.js'} };
                 reply.view('index',context);
             },
