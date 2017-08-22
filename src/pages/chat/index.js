@@ -6,10 +6,6 @@ import { Grid, Row } from 'react-bootstrap'
 import App from './app.js'
 
 render(
-  <Grid>
-    <Row className='show-grid'>
-        <App />
-    </Row>
-  </Grid>,
-  document.getElementById('root')
+  <App/>,
+  document.getElementById('root') 
 )
