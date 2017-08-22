@@ -13,13 +13,14 @@ export default class App extends React.Component {
         super(props);
 
         this.state = {
-           total_popups: 0,
-           popups: []
+            total_popups: 0,
+            popups: []
         }
 
         this.handleRegisterPopup = this.handleRegisterPopup.bind(this)
         this.handleClosePopup = this.handleClosePopup.bind(this)
         this.calculatePopups = this.calculatePopups.bind(this)
+        this.handleSendMessage = this.handleSendMessage.bind(this)
     }
 
     componentWillMount() {
@@ -30,6 +31,27 @@ export default class App extends React.Component {
             array.length = from < 0 ? array.length + from : from;
             return array.push.apply(array, rest);
         };
+
+        $(document).ready(function(){
+            socket = window.io.connect(`${window.location.origin}?token=${window.userId}`);
+            socket.on('chat:messages:latest', function(msg){
+               //$('.popup-messages').scrollTop($('.popup-messages')[0].scrollHeight);
+                //notifyMe(msg.message);
+                console.log(`receive message ${JSON.stringify(msg)}`)
+                const popups = this.state.popups.slice();
+
+                for(var iii = 0; iii < popups.length; iii++)
+                {   
+                    //is name unique ???
+                    if(msg.from === popups[iii].name)
+                    {
+                        popups[iii].messages.push(msg)
+                    }
+                }               
+                
+                this.setState(Object.assign({}, this.state, {popups}))
+            });
+        })
     }
 
     componentWillUnmount() {
@@ -67,10 +89,22 @@ export default class App extends React.Component {
         }   
     }
 
+    handleSendMessage(m) {
+        console.log(`pages/chat/app.js send message ${m}`)
+        window.socket.emit('io:message', 
+        {
+            from: window.username,
+            //to: "custom:id:5975521f4a9369769347a129",  //hard-coded
+            to: "custom:id:59749ded2e7e6b1b34bb1038",
+            message: m
+        });
+    }
+
     handleRegisterPopup(id, name) {
 
         const popups = this.state.popups.slice();
         let total_popups = 0;
+        const messages = []
 
         for(var iii = 0; iii < popups.length; iii++)
         {   
@@ -81,7 +115,7 @@ export default class App extends React.Component {
             }
         }               
         
-        popups.unshift({id, name});
+        popups.unshift({id, name, messages});
         total_popups = this.calculatePopups();
 
         this.setState(Object.assign({}, this.state, {popups, total_popups}))
@@ -93,7 +127,7 @@ export default class App extends React.Component {
         if (this.state.total_popups && this.state.popups.length > 0 ) {
             let right = window.innerWidth - document.getElementById('chat-panel').getBoundingClientRect().right + 220;
             for (let i=0; i <= this.state.total_popups && i < this.state.popups.length; i++) {
-                _chatboxes.push(<ChatBox right={{ right: right}} key={this.state.popups[i].id} handleClosePopup={this.handleClosePopup} name={this.state.popups[i].name} id={this.state.popups[i].id}></ChatBox>)
+                _chatboxes.push(<ChatBox handleSubmit={this.handleSendMessage} right={{ right: right}} key={this.state.popups[i].id} handleClosePopup={this.handleClosePopup} name={this.state.popups[i].name} id={this.state.popups[i].id} messages={this.state.popups[i].messages}></ChatBox>)
                 right = right + 320;
             }
         }
