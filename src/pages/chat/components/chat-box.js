@@ -15,7 +15,8 @@ export default class ChatBox extends React.Component {
     }
 
     handleSubmit(e) {
-        this.props.handleSubmit(this.state.m)
+        this.props.handleSubmit(this.props.id,this.state.m)
+        //$(this.popupMessages).scrollTop($(this.popupMessages)[0].scrollHeight);
         this.setState(Object.assign({}, this.state, { m: '' }));
         e.preventDefault();
     }
@@ -29,7 +30,7 @@ export default class ChatBox extends React.Component {
     }
 
     render() {
-         
+          
         let _messages = [];
         this.props.messages.forEach( msg => {
             _messages.push(<li><strong>{msg.from}:</strong>&nbsp;<span>{msg.message}</span></li>)
@@ -40,7 +41,7 @@ export default class ChatBox extends React.Component {
                         <div className="popup-head-right"><a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>
                         <div style={{clear: 'both'}}></div>
                     </div>
-                    <div className="popup-messages">
+                    <div className="popup-messages"  ref={(input) => { this.popupMessages = input; }}>
                          <ul id="messages">{_messages}</ul>   
                     </div> 
                     <div className="popup-footer" style={{lineHeight: '2em'}}>

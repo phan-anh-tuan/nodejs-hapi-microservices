@@ -14,15 +14,52 @@ export default class App extends React.Component {
 
         this.state = {
             total_popups: 0,
-            popups: []
+            popups: [],
+            onlines: [  { id: '597be22a26bce415cec31614', name: 'tuanphan2', new_message: false},
+                        { id: '59749ded2e7e6b1b34bb1038', name: 'tuanphan', new_message: false},
+                        { id: 'garth-thomas', name: 'Garth Thomas', new_message: false}
+            ]
         }
 
         this.handleRegisterPopup = this.handleRegisterPopup.bind(this)
         this.handleClosePopup = this.handleClosePopup.bind(this)
         this.calculatePopups = this.calculatePopups.bind(this)
         this.handleSendMessage = this.handleSendMessage.bind(this)
+        this.handleMessageArrival = this.handleMessageArrival.bind(this)
     }
-
+    handleMessageArrival(msg,selfMsg = false) {
+        
+        //notifyMe(msg.message);
+        const popups = this.state.popups.slice();
+        let found = false
+        let popupMessageSelector = ``
+        for(var iii = 0; iii < popups.length & !found; iii++)
+        {   
+            if (!selfMsg) {
+                //is name unique ???
+                if(msg.from === popups[iii].name)
+                {
+                    found = true;
+                    popups[iii].messages.push(msg)
+                    popupMessageSelector = `div#${popups[iii].id} div.popup-messages`
+                }
+            } else {
+                if(msg.to === popups[iii].id)
+                {
+                    found = true;
+                    popups[iii].messages.push(msg)
+                    popupMessageSelector = `div#${popups[iii].id} div.popup-messages`
+                }
+            }
+        }               
+        if (found) {
+            this.setState(Object.assign({}, this.state, {popups}))
+        
+            $(popupMessageSelector).scrollTop($(popupMessageSelector)[0].scrollHeight + 50);
+        } else {
+            // update chat-sidebar
+        }
+    }
     componentWillMount() {
        console.log(`chat\app will mount`)
          //this function can remove a array element.
@@ -31,26 +68,10 @@ export default class App extends React.Component {
             array.length = from < 0 ? array.length + from : from;
             return array.push.apply(array, rest);
         };
-
+        const _self = this
         $(document).ready(function(){
             socket = window.io.connect(`${window.location.origin}?token=${window.userId}`);
-            socket.on('chat:messages:latest', function(msg){
-               //$('.popup-messages').scrollTop($('.popup-messages')[0].scrollHeight);
-                //notifyMe(msg.message);
-                console.log(`receive message ${JSON.stringify(msg)}`)
-                const popups = this.state.popups.slice();
-
-                for(var iii = 0; iii < popups.length; iii++)
-                {   
-                    //is name unique ???
-                    if(msg.from === popups[iii].name)
-                    {
-                        popups[iii].messages.push(msg)
-                    }
-                }               
-                
-                this.setState(Object.assign({}, this.state, {popups}))
-            });
+            socket.on('chat:messages:latest', _self.handleMessageArrival);
         })
     }
 
@@ -89,15 +110,16 @@ export default class App extends React.Component {
         }   
     }
 
-    handleSendMessage(m) {
-        console.log(`pages/chat/app.js send message ${m}`)
+    handleSendMessage(t,m) {
+        //console.log(`pages/chat/app.js send message ${m}`)
         window.socket.emit('io:message', 
         {
+            //from: `${window.username}:${window.userId}`,
             from: window.username,
-            //to: "custom:id:5975521f4a9369769347a129",  //hard-coded
-            to: "custom:id:59749ded2e7e6b1b34bb1038",
+            to: `custom:id:${t}`,
             message: m
         });
+        this.handleMessageArrival({ from: 'me', to: t, message:m },true)
     }
 
     handleRegisterPopup(id, name) {
@@ -154,7 +176,7 @@ export default class App extends React.Component {
                 </Row>
                 <Row className='show-grid'>
                     <Col sm={12} id='chat-panel'>
-                        <ChatSidebar handleRegisterPopup={this.handleRegisterPopup}/>
+                        <ChatSidebar handleRegisterPopup={this.handleRegisterPopup} onlines={this.state.onlines} />
                         {_chatboxes}
                     </Col>
                 </Row>
