@@ -48,14 +48,14 @@ export default class App extends React.Component {
     }
 
     handlePersonOffline(msg) {
-        const _onlines = this.state.onlines.slice();
+        const onlines = this.state.onlines.slice();
         let found = false
-        for(var iii = 0; iii < _onlines.length & !found; iii++)
+        for(var iii = 0; iii < onlines.length & !found; iii++)
         {   
-            if(msg.id === _onlines[iii].id)
+            if(msg.id === onlines[iii].id)
             {
                 found = true;
-                const onlines = _onlines.splice(iii+1,1)
+                onlines.splice(iii,1)
                 this.setState(Object.assign({}, this.state, {onlines}))
             }
         }               
