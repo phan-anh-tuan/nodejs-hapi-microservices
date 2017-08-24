@@ -39,22 +39,20 @@ internals.applyRoutes = function (server, next) {
                     return reply(Boom.notFound('Document not found.'));
                 }
 
-                
+                request.cookieAuth.clear();
+
                 if (server.plugins['login'].onlines.has(credentials.user._id.toString())) {
-                    server.plugins['login'].onlines.delete(credentials.user._id.toString())
-                      server.plugins['socket-io'].io.emit('chat:messages:latest', { agent: credentials.user.username,
-                                                                                message: 'offline'});
+                    server.plugins['login'].delete(credentials.user._id.toString())
+                    server.plugins['socket-io'].io.emit('chat:person:offline', { name: credentials.user.username,
+                                                                                id: credentials.user._id.toString()});
                 }
 
-                request.cookieAuth.clear();
-                
-                                
                 reply({ success: true });
             });
         }
     });
 
-
+ 
     next();
 };
 

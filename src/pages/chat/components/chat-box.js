@@ -33,7 +33,7 @@ export default class ChatBox extends React.Component {
           
         let _messages = [];
         this.props.messages.forEach( msg => {
-            _messages.push(<li><strong>{msg.from}:</strong>&nbsp;<span>{msg.message}</span></li>)
+            _messages.push(<li><strong>{msg.from.split(':')[0]}:</strong>&nbsp;<span>{msg.message}</span></li>)
         })
         return (<div className="popup-box chat-popup" id={this.props.id} style={this.props.right}>
                     <div className="popup-head">

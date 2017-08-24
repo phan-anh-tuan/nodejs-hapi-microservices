@@ -115,9 +115,9 @@ internals.applyRoutes = function (server, next) {
 
             request.cookieAuth.set(result);
             if (!internals.onlines.has(request.pre.user._id.toString())) {
-                internals.onlines.set(request.pre.user._id.toString(),1)
-                server.plugins['socket-io'].io.emit('chat:messages:latest', { from: request.pre.user.username,
-                                                                                message: 'online'});
+                internals.onlines.set(request.pre.user._id.toString(),request.pre.user.username)
+                server.plugins['socket-io'].io.emit('chat:person:online', { name: request.pre.user.username,
+                                                                            id: request.pre.user._id.toString()});
             }
             
             reply(result);
@@ -296,9 +296,25 @@ internals.applyRoutes = function (server, next) {
     });
 
     server.expose('onlines', internals.onlines )
+    server.expose('set', internals.set )
+    server.expose('delete', internals.delete )
+    server.expose('get', internals.get )
     next();
 };
 
+internals.set = function (id, name) {
+    internals.onlines.set(id,name)
+}
+
+
+internals.get = function (id, name) {
+    return Array.from(internals.onlines)
+}
+
+internals.delete = function (id) {
+    console.log(`plugins/login delete online contact ${id} ${internals.onlines.delete(id)}`)
+    console.log(internals.get())
+}
 
 exports.register = function (server, options, next) {
 

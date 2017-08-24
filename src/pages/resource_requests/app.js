@@ -37,6 +37,7 @@ export default class App extends React.Component {
                     </Link>
                   </li>
                   <li role="presentation"><a href='/report'>Report</a></li>
+                  <li role="presentation"><a href='/chat'>IM</a></li>
                </Nav>
               <Nav pullRight>
                   <li role="presentation"><SearchBox/></li>
