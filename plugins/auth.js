@@ -66,11 +66,7 @@ internals.applyStrategy = function (server, next) {
                     } */
                     return callback(null, false);
                 }
-                console.log(request.headers)
-                console.log(request.path)
-                console.log(results.user._id.toString()) 
-                console.log(results.user.username)
-                console.log(onlines)
+                
                 if ( (!request.headers.referer || request.headers.referer.indexOf('signin/signout') === -1) && !onlines.has(results.user._id.toString())) {
                     //onlines.set(results.user._id.toString(),results.user.username)
                     console.log(`auth.js why i am here ${results.user._id.toString()} ${results.user.username}`)

@@ -18,7 +18,7 @@ export default class App extends React.Component {
             total_popups: 0,
             popups: [],
             onlines: [],
-            rooms: [{id:'public', name:'public'}]
+            rooms: [{id:'room_public', name:'public'}]
         }
 
         this.handleRegisterPopup = this.handleRegisterPopup.bind(this)
@@ -67,10 +67,33 @@ export default class App extends React.Component {
         
         //notifyMe(msg.message);
         const popups = this.state.popups.slice();
-        let {from} = msg
+        let {from, to} = msg
         const [name,id] = from.split(':')
         let found = false
         let popupMessageSelector = ``
+        //room message
+        if (to.indexOf('custom:id:room') !== -1) {
+            const roomId = to.substring(10)
+            for(var iii = 0; iii < popups.length & !found; iii++)
+            {   
+                if( roomId === popups[iii].id)
+                {
+                    found = true;
+                    popups[iii].messages.push(msg)
+                    popupMessageSelector = `div#${popups[iii].id} div.popup-messages`
+                    this.setState(Object.assign({}, this.state, {popups}))
+                    $(popupMessageSelector).scrollTop($(popupMessageSelector)[0].scrollHeight + 50);
+                }
+            }       
+
+            if (!found) {
+                const roomName = 'public' // hard-coded for now, you should get it from this.state.rooms
+                this.handleRegisterPopup(roomId,roomName)
+                this.handleMessageArrival(msg)
+            }
+            return;
+        }
+        // 1-1 message
         for(var iii = 0; iii < popups.length & !found; iii++)
         {   
             if (!selfMsg) {
@@ -99,7 +122,6 @@ export default class App extends React.Component {
 
             //What I did below if for demonstration purpose
             this.handleRegisterPopup(id,name)
-
             this.handleMessageArrival(msg)
         }
     }
@@ -174,7 +196,7 @@ export default class App extends React.Component {
     }
 
     handleSendMessage(t,m) {
-        //console.log(`pages/chat/app.js send message ${m}`)
+        console.log(`pages/chat/app.js send message ${m}`)
         window.socket.emit('io:message', 
         {
             from: `${window.username}:${window.userId}`,
@@ -182,7 +204,9 @@ export default class App extends React.Component {
             to: `custom:id:${t}`,
             message: m
         });
-        this.handleMessageArrival({ from: 'me', to: t, message:m },true)
+        if (t.indexOf('room') === -1) {
+            this.handleMessageArrival({ from: `me:${window.userId}`, to: t, message:m },true)
+        }
     }
 
     handleRegisterPopup(id, name) {

@@ -21,11 +21,17 @@ exports.register = function (server, options, next) {
     }
 
     //internals.chat = internals.io.of('/chat').on('connection', function(socket) {
+
     io.on('connection', function(socket) {
+        const PUBLIC_ROOM = 'custom:id:room_public'
         socket.on('io:message', function(msg){
             console.log(`plugins/socket-io receive message ${JSON.stringify(msg)}`) 
             const {from, to, message} = msg
             io.to(to).emit('chat:messages:latest', msg);
+        });
+        socket.join(PUBLIC_ROOM, (error) => {
+            if (error) console.log(error)
+            //io.to(PUBLIC_ROOM).emit('chat:messages:latest','a new user has joined the room'); // broadcast to everyone in the room   
         });
     })
     
