@@ -25,9 +25,7 @@
 <div id="content">
     {{{content}}}
 </div>
-{{! Import the contents of footer.html from partials}}
-{{> footer}}
-
+{{#isLogin}}
 <div class="chat_box" id="chat">
     <div class="chatheader" onclick='showhidechat()'>Messenger</div>
     <div class="pesan_chat">
@@ -40,6 +38,32 @@
         <input id="m" autocomplete="off" /><button>Send</button>
         </form>
     </div>
-</div>
+</div>       
+
+<script>
+    $(document).ready(function(){
+        //var socket = io.connect(`${window.location.origin}/chat`);
+        var socket = io.connect(`${window.location.origin}?token={{user.token}}`);
+        $('form.chat').submit(function(){
+            socket.emit('io:message', 
+            {
+                from: "{{user.name}}",
+                to: "custom:id:5975521f4a9369769347a129",  //hard-coded
+                message: $('#m').val()
+            });
+            $('#m').val('');
+            return false;
+        });
+        socket.on('chat:messages:latest', function(msg){
+            $('#messages').append($('<li>').html('<strong>'+msg.from+':</strong>&nbsp;<span>'+msg.message+'</span'));
+            $('.pesan_chat').scrollTop($('.pesan_chat')[0].scrollHeight);
+            notifyMe(msg.message);
+            //window.scrollTo(0, document.body.scrollHeight);
+        });
+    })
+</script>             
+{{/isLogin}}
+{{! Import the contents of footer.html from partials}}
+{{> footer}}
 </body>
 </html>

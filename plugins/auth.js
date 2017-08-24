@@ -54,17 +54,27 @@ internals.applyStrategy = function (server, next) {
                     done(null, Object.keys(results.user.roles));
                 }]
             }, (err, results) => {
-
+                const onlines = server.plugins['login'].onlines
                 if (err) {
                     return callback(err);
                 }
 
                 if (!results.session) {
+                    /*if (onlines.has(results.user._id.toString())) {
+                        //onlines.delete(results.user._id.toString())
+                        server.plugins['login'].delete(results.user._id.toString())
+                    } */
                     return callback(null, false);
                 }
-
+                
+                if ( (!request.headers.referer || request.headers.referer.indexOf('signin/signout') === -1) && !onlines.has(results.user._id.toString())) {
+                    //onlines.set(results.user._id.toString(),results.user.username)
+                    console.log(`auth.js why i am here ${results.user._id.toString()} ${results.user.username}`)
+                      
+                    server.plugins['login'].set(results.user._id.toString(),results.user.username)
+                }
                 callback(null, Boolean(results.user), results);
-            });
+            }); 
         }
     });
 
@@ -117,7 +127,7 @@ internals.preware = {
 
 exports.register = function (server, options, next) {
 
-    server.dependency('hapi-mongo-models', internals.applyStrategy);
+    server.dependency(['hapi-mongo-models'], internals.applyStrategy);
 
     next();
 };

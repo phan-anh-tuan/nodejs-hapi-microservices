@@ -41,12 +41,18 @@ internals.applyRoutes = function (server, next) {
 
                 request.cookieAuth.clear();
 
+                if (server.plugins['login'].onlines.has(credentials.user._id.toString())) {
+                    server.plugins['login'].delete(credentials.user._id.toString())
+                    server.plugins['socket-io'].io.emit('chat:person:offline', { name: credentials.user.username,
+                                                                                id: credentials.user._id.toString()});
+                }
+
                 reply({ success: true });
             });
         }
     });
 
-
+ 
     next();
 };
 

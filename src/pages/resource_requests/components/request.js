@@ -15,8 +15,8 @@ class Request extends React.Component {
     handleSelect(eventKey) {
         const { _id  } = this.props.data;
         const baseUrl  = this.props.baseUrl;
-        switch(eventKey) {
-            case '1':
+        switch(eventKey) { 
+            case '1': 
                 this.props.handleAddComment(_id,this.state.text)
                                             .then(() => this.setState({text: ''}))
                                             .catch((error) => {
