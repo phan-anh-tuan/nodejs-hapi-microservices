@@ -17,11 +17,8 @@ export default class App extends React.Component {
         this.state = {
             total_popups: 0,
             popups: [],
-            onlines: []
-            /*onlines: [  { id: '597be22a26bce415cec31614', name: 'tuanphan2', new_message: false},
-                        { id: '59749ded2e7e6b1b34bb1038', name: 'tuanphan', new_message: false},
-                        { id: 'garth-thomas', name: 'Garth Thomas', new_message: false}
-            ]*/
+            onlines: [],
+            rooms: [{id:'public', name:'public'}]
         }
 
         this.handleRegisterPopup = this.handleRegisterPopup.bind(this)
@@ -242,7 +239,7 @@ export default class App extends React.Component {
                 </Row>
                 <Row className='show-grid'>
                     <Col sm={12} id='chat-panel'>
-                        <ChatSidebar handleRegisterPopup={this.handleRegisterPopup} onlines={this.state.onlines} />
+                        <ChatSidebar handleRegisterPopup={this.handleRegisterPopup} onlines={this.state.onlines} rooms={this.state.rooms}/>
                         {_chatboxes}
                     </Col>
                 </Row>
