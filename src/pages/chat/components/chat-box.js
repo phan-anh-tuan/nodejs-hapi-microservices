@@ -25,6 +25,16 @@ export default class ChatBox extends React.Component {
         console.log(`chat/components/chat-box will mount`)
     }
 
+    componentDidMount() {
+        const uploadImageSelector = `div#${this.props.id} div.popup-head div.popup-head-right img`
+        const fileChooserSelector = `div#${this.props.id} input[type="file"]`
+        $(uploadImageSelector).on("click", function() {
+            $(fileChooserSelector).trigger("click");
+        });
+
+        console.log(`chat/components/chat-box did mount`)
+    }
+
     componentWillUnmount() {
         console.log(`chat/components/chat-box will unmount`)
     }
@@ -36,9 +46,10 @@ export default class ChatBox extends React.Component {
             _messages.push(<li><strong>{msg.from.split(':')[0]}:</strong>&nbsp;<span>{msg.message}</span></li>)
         })
         return (<div className="popup-box chat-popup" id={this.props.id} style={this.props.right}>
+                    <input type="file" accept="image/*" style={{display: 'none'}} />
                     <div className="popup-head">
                         <div className="popup-head-left">{this.props.name}</div>
-                        <div className="popup-head-right"><a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>
+                        <div className="popup-head-right"><img width="30" height="30" src="/assets/img/camera1600.png" />{'  '}<a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>
                         <div style={{clear: 'both'}}></div>
                     </div>
                     <div className="popup-messages"  ref={(input) => { this.popupMessages = input; }}>
