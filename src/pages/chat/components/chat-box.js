@@ -28,9 +28,34 @@ export default class ChatBox extends React.Component {
     componentDidMount() {
         const uploadImageSelector = `div#${this.props.id} div.popup-head div.popup-head-right img`
         const fileChooserSelector = `div#${this.props.id} input[type="file"]`
+        const recipientId = this.props.id;
         $(uploadImageSelector).on("click", function() {
             $(fileChooserSelector).trigger("click");
         });
+
+        if(window.File && window.FileReader){ //These are the relevant HTML5 objects that we are going to use 
+            $(fileChooserSelector).on('change', function(evnt){
+                const SelectedFile = evnt.target.files[0];
+                SelectedFiles.set(`${window.userId}:${recipientId}:${SelectedFile.name}`,SelectedFile);
+                if(SelectedFile.name !== "")
+                {
+                    FReader = new FileReader();
+                    FReader.onload = function(evnt){
+                        //console.log('chat-box.js Emit Upload event')
+                        window.socket.emit('Upload', { 'Name' : SelectedFile.name, Data : evnt.target.result, From: window.userId, FromUserName: window.username,  To: recipientId });
+                    }
+                    window.socket.emit('Start', { 'Name' : SelectedFile.name, 'Size' : SelectedFile.size, From: window.userId, To: recipientId});
+                }
+                else
+                {
+                    alert("Please Select A File");
+                }
+            });
+        }
+        else
+        {
+            alert("Your Browser Doesn't Support The File API Please Update Your Browser");
+        }
 
         console.log(`chat/components/chat-box did mount`)
     }
@@ -43,10 +68,14 @@ export default class ChatBox extends React.Component {
           
         let _messages = [];
         this.props.messages.forEach( msg => {
-            _messages.push(<li><strong>{msg.from.split(':')[0]}:</strong>&nbsp;<span>{msg.message}</span></li>)
+            if (msg.type === 'url') {
+                _messages.push(<li><strong>{msg.from.split(':')[0]}:</strong>&nbsp;<span dangerouslySetInnerHTML={{__html: msg.message}} /></li>)
+            } else {
+                _messages.push(<li><strong>{msg.from.split(':')[0]}:</strong>&nbsp;<span>{msg.message}</span></li>)
+            }
         })
         return (<div className="popup-box chat-popup" id={this.props.id} style={this.props.right}>
-                    <input type="file" accept="image/*" style={{display: 'none'}} />
+                    <input type="file" style={{display: 'none'}} />
                     <div className="popup-head">
                         <div className="popup-head-left">{this.props.name}</div>
                         <div className="popup-head-right"><img width="30" height="30" src="/assets/img/camera1600.png" />{'  '}<a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>

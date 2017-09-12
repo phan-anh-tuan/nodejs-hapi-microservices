@@ -140,7 +140,21 @@ export default class App extends React.Component {
             socket.on('chat:messages:latest', _self.handleMessageArrival);
             socket.on('chat:person:online', _self.handlePersonOnline);
             socket.on('chat:person:offline', _self.handlePersonOffline);
-            
+            socket.on('Done', function() { alert('upload complete')});
+            socket.on('MoreData', function (data){
+                const SelectedFile = SelectedFiles.get(`${data['From']}:${data['To']}:${data['Name']}`);
+                const Place = data['Place'] * 524288; //The Next Blocks Starting Position
+                let NewFile; //The Variable that will hold the new Block of Data
+                if(SelectedFile.webkitSlice) 
+                    NewFile = SelectedFile.webkitSlice(Place, Place + Math.min(524288, (SelectedFile.size-Place)));
+                else if(SelectedFile.mozSlice) 
+                    NewFile = SelectedFile.mozSlice(Place, Place + Math.min(524288, (SelectedFile.size-Place)));
+                else 
+                    NewFile = SelectedFile.slice(Place, Place + Math.min(524288, (SelectedFile.size-Place)));
+                //console.log(`app.js reading ${SelectedFile.name} from byte ${Place}th to byte ${Math.min(524288, (SelectedFile.size-Place))}`)
+                //FReader.readAsArrayBuffer(NewFile);
+                FReader.readAsBinaryString(NewFile);
+            });
         })
 
         //get online contact list
