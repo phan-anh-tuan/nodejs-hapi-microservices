@@ -1,5 +1,6 @@
 /node_modules
 /public/js
+/tmp
 *.log
 *.txt
 application-configuration.json

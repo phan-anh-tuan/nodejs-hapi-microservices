@@ -1,5 +1,7 @@
 
 const Path = require('path');
+const stream = require('stream');
+const fs = require('fs');
 const internals = {}
 
 internals.applyRoutes = function(server,next) {
@@ -68,6 +70,52 @@ internals.applyRoutes = function(server,next) {
             },
         }
     });
+
+
+    server.route({
+        method: 'GET',
+        path: '/files/download/{from}/{to}/{filename}/{path*}',
+        config: {
+            auth: {
+                strategy: 'session',
+                scope: 'account'
+            },
+            handler: function(request, reply) {
+                /*
+                class FileUploadStream extends stream.Readable {
+                    constructor(from,to,name) {
+                        super();
+                        this.from = from;
+                        this.to = to;
+                        this.name = name
+                    }
+                    _read(size) {
+                        const chunk = server.plugins['socket-io'].readData(this.from,this.to,this.name)
+                        console.log(`web.js read data chunk from ${this.from}:${this.to}:${this.name}, total bytes: ${chunk.data.length}, end: ${chunk.end}`)
+                        if (chunk.data.length > 0) {
+                            this.push(chunk.data);
+                        }
+                        if(chunk.end) {
+                            this.push(null);
+                        }
+
+                        this.pause();
+                        console.log('web.js There will be no additional data for 1 second.');
+                        setTimeout(() => {
+                          console.log('web.js Now data will start flowing again.');
+                          this.resume();
+                        }, 5000)
+                    }
+                }
+                */
+                //const rs = new FileUploadStream(request.params.from,request.params.to,request.params.filename);
+                const rs = fs.createReadStream(Path.resolve(`${__dirname}/../tmp/${request.params.from}/${request.params.to}/${request.params.filename}`))
+                reply(rs)
+            },
+        }
+    });
+    
+    
 
     server.route({
         method: 'GET',
