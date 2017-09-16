@@ -17,7 +17,7 @@ exports.register = function (server, options, next) {
 
     let candidatesQueue = {};
     let kurentoClient = null;
-    let ws_uri = "ws://ec2-13-54-236-153.ap-southeast-2.compute.amazonaws.com:8888/kurento"
+    let ws_uri = "ws://localhost:8888/kurento"
 
     const BUFFER_SIZE = 10485760; //10 MB
     const CHUNK_SIZE = 524288; // 0.5 MB
@@ -413,7 +413,7 @@ exports.register = function (server, options, next) {
 
         kurento(ws_uri, function(error, _kurentoClient) {
             if (error) {
-                var message = 'Coult not find media server at address ' + argv.ws_uri;
+                var message = 'Could not find media server at address ' + ws_uri;
                 return callback(message + ". Exiting with error " + error);
             }
 

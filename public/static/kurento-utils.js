@@ -293,6 +293,8 @@ function WebRtcPeer(mode, options, callback) {
             remoteVideo.pause();
             remoteVideo.src = url;
             remoteVideo.load();
+            logger.info(remoteVideo);
+            logger.info(remoteVideo.src);
             logger.info('Remote URL:', url);
         }
     }
