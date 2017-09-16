@@ -106,7 +106,11 @@ function incomingCall(message) {
 		var options = {
 			localVideo : videoInput,
 			remoteVideo : videoOutput,
-			onicecandidate : onIceCandidate
+			onicecandidate : onIceCandidate,
+            configuration: {
+                iceServers:
+                    [{url:'stun:173.194.66.127:19302'}]
+                }
 		}
 
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
