@@ -125,6 +125,7 @@ export default class App extends React.Component {
             this.handleMessageArrival(msg)
         }
     }
+
     componentWillMount() {
        console.log(`chat/app will mount`)
          //this function can remove a array element.
@@ -140,8 +141,8 @@ export default class App extends React.Component {
             socket.on('chat:messages:latest', _self.handleMessageArrival);
             socket.on('chat:person:online', _self.handlePersonOnline);
             socket.on('chat:person:offline', _self.handlePersonOffline);
-            socket.on('Done', function() { alert('upload complete')});
-            socket.on('MoreData', function (data){
+            socket.on('fileupload:done', function() { alert('upload complete')});
+            socket.on('fileupload:moredata', function (data){
                 const SelectedFile = SelectedFiles.get(`${data['From']}:${data['To']}:${data['Name']}`);
                 const Place = data['Place'] * 524288; //The Next Blocks Starting Position
                 let NewFile; //The Variable that will hold the new Block of Data
@@ -154,6 +155,55 @@ export default class App extends React.Component {
                 //console.log(`app.js reading ${SelectedFile.name} from byte ${Place}th to byte ${Math.min(524288, (SelectedFile.size-Place))}`)
                 //FReader.readAsArrayBuffer(NewFile);
                 FReader.readAsBinaryString(NewFile);
+            });
+
+            socket.on('webrtc:message', function(message) {
+                console.info('Received message: ' + message);
+                var parsedMessage = JSON.parse(message);
+                
+
+                switch (parsedMessage.id) {
+                    case 'registerResponse':
+                        resgisterResponse(parsedMessage);
+                        break;
+                    case 'callResponse':
+                        callResponse(parsedMessage);
+                        break;
+                    case 'incomingCall':
+                        incomingCall(parsedMessage);
+                        break;
+                    case 'startCommunication':
+                        startCommunication(parsedMessage);
+                        break;
+                    case 'stopCommunication':
+                        console.info("Communication ended by remote peer");
+                        stop(true);
+                        break;
+                    case 'iceCandidate':
+                        webRtcPeer.addIceCandidate(parsedMessage.candidate)
+                        break;
+                    default:
+                        console.error('Unrecognized message', parsedMessage);
+                }
+            })
+            register(window.username)
+
+            //console = new Console();
+            setRegisterState(NOT_REGISTERED);
+            //var drag = new Draggabilly(document.getElementById('videoSmall'));
+            videoInput = document.getElementById('videoInput');
+            videoOutput = document.getElementById('videoOutput');
+            //document.getElementById('name').focus();
+
+            /*document.getElementById('register').addEventListener('click', function() {
+                register();
+            });*/
+            /*        
+            document.getElementById('call').addEventListener('click', function() {
+                //call();
+            });*/
+            document.getElementById('terminate').addEventListener('click', function() {
+                stop();
             });
         })
 
@@ -279,6 +329,18 @@ export default class App extends React.Component {
                     <Col sm={12} id='chat-panel'>
                         <ChatSidebar handleRegisterPopup={this.handleRegisterPopup} onlines={this.state.onlines} rooms={this.state.rooms}/>
                         {_chatboxes}
+                    </Col>
+                </Row>
+                <Row className='show-grid'>
+                    <Col sm={12} id='video-panel' style={{position: 'absolute', left: '0px', width: '600px'}}>
+                        <a id="terminate" href="#" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-stop"></span> Stop</a>
+                        <div id="videoBig">
+                            <video id="videoOutput" autoPlay width="640px" height="480px" poster="assets/img/webrtc.png"></video>
+                        </div>
+                        <div id="videoSmall">
+                            <video id="videoInput" autoPlay width="240px" height="180px" poster="assets/img/webrtc.png"></video>
+                        </div>
                     </Col>
                 </Row>
             </Grid>

@@ -47,6 +47,7 @@
     "inert": "^4.2.0",
     "isomorphic-fetch": "^2.2.1",
     "joi": "^10.5.2",
+    "kurento-client": "^6.6.0",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "moment": "^2.18.1",

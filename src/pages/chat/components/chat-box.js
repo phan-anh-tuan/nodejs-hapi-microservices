@@ -26,13 +26,17 @@ export default class ChatBox extends React.Component {
     }
 
     componentDidMount() {
-        const uploadImageSelector = `div#${this.props.id} div.popup-head div.popup-head-right img`
+        const uploadImageSelector = `div#${this.props.id} div.popup-head div.popup-head-right img:nth-child(2)`
+        const videoCallImageSelector = `div#${this.props.id} div.popup-head div.popup-head-right img:nth-child(1)`
         const fileChooserSelector = `div#${this.props.id} input[type="file"]`
         const recipientId = this.props.id;
+        const recipientName = this.props.name;
         $(uploadImageSelector).on("click", function() {
             $(fileChooserSelector).trigger("click");
         });
-
+        $(videoCallImageSelector).on("click", function() {
+            call(recipientName)
+        });
         if(window.File && window.FileReader){ //These are the relevant HTML5 objects that we are going to use 
             $(fileChooserSelector).on('change', function(evnt){
                 const SelectedFile = evnt.target.files[0];
@@ -42,9 +46,9 @@ export default class ChatBox extends React.Component {
                     FReader = new FileReader();
                     FReader.onload = function(evnt){
                         //console.log('chat-box.js Emit Upload event')
-                        window.socket.emit('Upload', { 'Name' : SelectedFile.name, Data : evnt.target.result, From: window.userId, FromUserName: window.username,  To: recipientId });
+                        window.socket.emit('fileupload:upload', { 'Name' : SelectedFile.name, Data : evnt.target.result, From: window.userId, FromUserName: window.username,  To: recipientId });
                     }
-                    window.socket.emit('Start', { 'Name' : SelectedFile.name, 'Size' : SelectedFile.size, From: window.userId, To: recipientId});
+                    window.socket.emit('fileupload:start', { 'Name' : SelectedFile.name, 'Size' : SelectedFile.size, From: window.userId, To: recipientId});
                 }
                 else
                 {
@@ -78,7 +82,7 @@ export default class ChatBox extends React.Component {
                     <input type="file" style={{display: 'none'}} />
                     <div className="popup-head">
                         <div className="popup-head-left">{this.props.name}</div>
-                        <div className="popup-head-right"><img width="30" height="30" src="/assets/img/camera1600.png" />{'  '}<a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>
+                        <div className="popup-head-right"><img width="30" height="30" src="/assets/img/videocall.png" />{' '}<img width="30" height="30" src="/assets/img/camera1600.png" />{'  '}<a onClick={() => this.props.handleClosePopup(this.props.id)}>&#10005;</a></div>
                         <div style={{clear: 'both'}}></div>
                     </div>
                     <div className="popup-messages"  ref={(input) => { this.popupMessages = input; }}>

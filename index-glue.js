@@ -11,7 +11,8 @@ const dbOpts = {
 
 const manifest = {
     server: {},
-    connections: [{port:3000, host:'localhost'}],
+    //connections: [{port:3000, host:'localhost'}],
+    connections: [{port:3000, host: '192.168.1.11', address:'192.168.1.11'}],
     registrations: 
     [
         { plugin: { register: 'inert'} },
