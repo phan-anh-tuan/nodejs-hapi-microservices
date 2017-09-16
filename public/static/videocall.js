@@ -167,7 +167,7 @@ function call(peer) {
 		onicecandidate : onIceCandidate,
         configuration: {
             iceServers:
-            [{url:'173.194.66.127:19302'}]
+            [{url:'stun:173.194.66.127:19302'}]
         }
 	}
 
