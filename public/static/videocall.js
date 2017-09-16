@@ -164,7 +164,11 @@ function call(peer) {
 	var options = {
 		localVideo : videoInput,
 		remoteVideo : videoOutput,
-		onicecandidate : onIceCandidate
+		onicecandidate : onIceCandidate,
+        configuration: {
+            iceServers:
+            [{url:'173.194.66.127:19302'}]
+        }
 	}
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
