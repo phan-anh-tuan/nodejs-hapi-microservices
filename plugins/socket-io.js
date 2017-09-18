@@ -455,7 +455,7 @@ exports.register = function (server, options, next) {
 
                     callerWebRtcEndpoint.on('OnIceCandidate', function(event) {
                         var candidate = kurento.getComplexType('IceCandidate')(event.candidate);
-                        userRegistry.getById(callerId).ws.send(JSON.stringify({
+                        userRegistry.getById(callerId).ws.emit('webrtc:message',JSON.stringify({
                             id : 'iceCandidate',
                             candidate : candidate
                         }));
