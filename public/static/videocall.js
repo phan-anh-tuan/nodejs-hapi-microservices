@@ -61,6 +61,7 @@ function resgisterResponse(message) {
 	if (message.response == 'accepted') {
 		setRegisterState(REGISTERED);
 	} else {
+		//what if end user refresh the page? should we handle window.onunload event ??
 		setRegisterState(NOT_REGISTERED);
 		var errorMessage = message.message ? message.message : 'Unknown reason for register rejection.';
 		console.log(errorMessage);
@@ -107,10 +108,10 @@ function incomingCall(message) {
 			localVideo : videoInput,
 			remoteVideo : videoOutput,
 			onicecandidate : onIceCandidate,
-          /*  configuration: {
-                iceServers:
-                    [{url:'stun:173.194.66.127:19302'}]
-                }*/
+			configuration: {
+				iceServers:
+				[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
+			}
 		}
 
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
@@ -169,10 +170,10 @@ function call(peer) {
 		localVideo : videoInput,
 		remoteVideo : videoOutput,
 		onicecandidate : onIceCandidate,
-        /*configuration: {
+        configuration: {
             iceServers:
-            [{url:'stun:173.194.66.127:19302'}]
-        }*/
+			[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
+        }
 	}
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(

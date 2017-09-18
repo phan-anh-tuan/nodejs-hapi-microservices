@@ -37,7 +37,7 @@ internals.applyRoutes = function(server,next) {
                 config: {
                     handler: function(request, reply) {
                         let context = { user: { role: 'user'},
-                                        script: { url: '/assets/js/signup.js'} };
+                                        script: [{ url: '/assets/js/signup.js'}] };
                         reply.view('index',context);
                     },
                 }
@@ -49,7 +49,7 @@ internals.applyRoutes = function(server,next) {
         config: {
             handler: function(request, reply) {
                 let context = { user: { role: 'user'},
-                                script: { url: '/assets/js/login.js'} };
+                                script: [{ url: '/assets/js/login.js'}] };
                 reply.view('index',context);
             },
         }
@@ -65,7 +65,7 @@ internals.applyRoutes = function(server,next) {
             },
             handler: function(request, reply) {
                 let context = { user: { role: 'user'},
-                                script: { url: '/assets/js/report.js'} };
+                                script: [{ url: '/assets/js/report.js'}] };
                 reply.view('index',context);
             },
         }
@@ -130,7 +130,13 @@ internals.applyRoutes = function(server,next) {
                                         token: request.auth.credentials.user._id,
                                         name: request.auth.credentials.user.username,
                                 },
-                                script: { url: '/assets/js/chat.js'} };
+                                script: [
+                                    { url: '/assets/js/chat.js'},
+                                    { url: '/assets/static/kurento-utils.js'},
+                                    { url: '/assets/static/adapter.js'},
+                                    { url: '/assets/static/videocall.js'},
+                                    { url: '/socket.io/socket.io.js'}]
+                            };
                 reply.view('index',context);
             },
         }
@@ -142,7 +148,7 @@ internals.applyRoutes = function(server,next) {
         config: {
             handler: function(request, reply) {
                 let context = { user: { role: 'user'},
-                                script: { url: '/assets/js/contact.js'} };
+                                script: [{url: '/assets/js/contact.js'}] };
                 reply.view('index',context);
             },
         }
@@ -158,7 +164,7 @@ internals.applyRoutes = function(server,next) {
             },
             handler: function(request, reply) {
                 let context = { user: { role: 'user'},
-                                script: { url: '/assets/js/bundle.js'} };
+                                script: [{ url: '/assets/js/bundle.js'}] };
                 reply.view('index', context);
             }
         }
@@ -176,7 +182,7 @@ internals.applyRoutes = function(server,next) {
                 let context = { user: { role: 'user',
                                         token: request.auth.credentials.user._id,
                                         name: request.auth.credentials.user.username},
-                                script: { url: '/assets/js/bundle.js'},
+                                script: [{ url: '/assets/js/bundle.js'}],
                                 isAuthenticated: true };
                 reply.view('index', context);
             }

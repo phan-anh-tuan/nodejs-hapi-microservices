@@ -258,7 +258,7 @@ exports.register = function (server, options, next) {
     }
 
     function incomingCallResponse(calleeId, from, callResponse, calleeSdp, ws) {
-
+        var pipeline;
         clearCandidatesQueue(calleeId);
 
         function onError(callerReason, calleeReason) {
@@ -286,7 +286,7 @@ exports.register = function (server, options, next) {
         var caller = userRegistry.getByName(from);
 
         if (callResponse === 'accept') {
-            var pipeline = new CallMediaPipeline();
+            pipeline = new CallMediaPipeline();
             pipelines[caller.id] = pipeline;
             pipelines[callee.id] = pipeline;
 
