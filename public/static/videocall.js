@@ -34,6 +34,7 @@ function setRegisterState(nextState) {
 const NO_CALL = 0;
 const PROCESSING_CALL = 1;
 const IN_CALL = 2;
+var audioCall = false;
 var callState = null
 
 function setCallState(nextState) {
@@ -41,6 +42,7 @@ function setCallState(nextState) {
 	case NO_CALL:
 		//$('#call').attr('disabled', false);
 		$('#terminate').attr('disabled', true);
+		audioCall = false
 		break;
 
 	case PROCESSING_CALL:
@@ -159,8 +161,8 @@ function register(id) {
 	sendMessage(message);
 }
 
-function call(peer, audioCall = false) {
-	
+function call(peer, _audioCall = false) {
+	audioCall = _audioCall;
 
 	setCallState(PROCESSING_CALL);
 
@@ -181,7 +183,7 @@ function call(peer, audioCall = false) {
 			audio : true,
 			video : false
 		}
-	}
+	} 
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
 			error) {
@@ -241,17 +243,21 @@ function onIceCandidate(candidate) {
 }
 
 function showSpinner() {
-	for (var i = 0; i < arguments.length; i++) {
-		arguments[i].poster = 'assets/img/transparent-1px.png';
-		arguments[i].style.background = 'center transparent url("assets/img/spinner.gif") no-repeat';
+	if (!audioCall) {
+		for (var i = 0; i < arguments.length; i++) {
+			arguments[i].poster = 'assets/img/transparent-1px.png';
+			arguments[i].style.background = 'center transparent url("assets/img/spinner.gif") no-repeat';
+		}
 	}
 }
 
 function hideSpinner() {
-	for (var i = 0; i < arguments.length; i++) {
-		arguments[i].src = '';
-		arguments[i].poster = 'assets/img/webrtc.png';
-		arguments[i].style.background = '';
+	if (!audioCall) {
+		for (var i = 0; i < arguments.length; i++) {
+			arguments[i].src = '';
+			arguments[i].poster = 'assets/img/webrtc.png';
+			arguments[i].style.background = '';
+		}
 	}
 }
 
