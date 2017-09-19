@@ -234,17 +234,17 @@ function onIceCandidate(candidate) {
 }
 
 function showSpinner() {
-	/*for (var i = 0; i < arguments.length; i++) {
-		arguments[i].poster = './img/transparent-1px.png';
-		arguments[i].style.background = 'center transparent url("./img/spinner.gif") no-repeat';
-	}*/
+	for (var i = 0; i < arguments.length; i++) {
+		arguments[i].poster = 'assets/img/transparent-1px.png';
+		arguments[i].style.background = 'center transparent url("assets/img/spinner.gif") no-repeat';
+	}
 }
 
 function hideSpinner() {
-	/*for (var i = 0; i < arguments.length; i++) {
+	for (var i = 0; i < arguments.length; i++) {
 		arguments[i].src = '';
-		arguments[i].poster = './img/webrtc.png';
+		arguments[i].poster = 'assets/img/webrtc.png';
 		arguments[i].style.background = '';
-	}*/
+	}
 }
 
