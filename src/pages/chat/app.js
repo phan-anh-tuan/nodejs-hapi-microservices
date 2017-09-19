@@ -308,7 +308,7 @@ export default class App extends React.Component {
         if (this.state.total_popups && this.state.popups.length > 0 ) {
             let right = window.innerWidth - document.getElementById('chat-panel').getBoundingClientRect().right + 220;
             for (let i=0; i <= this.state.total_popups && i < this.state.popups.length; i++) {
-                _chatboxes.push(<ChatBox handleSubmit={this.handleSendMessage} right={{ right: right}} key={this.state.popups[i].id} handleClosePopup={this.handleClosePopup} name={this.state.popups[i].name} id={this.state.popups[i].id} messages={this.state.popups[i].messages}></ChatBox>)
+                _chatboxes.push(<ChatBox handleSubmit={this.handleSendMessage} right={{ right: right, zIndex: 20}} key={this.state.popups[i].id} handleClosePopup={this.handleClosePopup} name={this.state.popups[i].name} id={this.state.popups[i].id} messages={this.state.popups[i].messages}></ChatBox>)
                 right = right + 320;
             }
         }

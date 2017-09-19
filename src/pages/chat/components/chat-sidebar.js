@@ -82,7 +82,8 @@ export default class ChatSidebar extends React.Component {
                 paddingTop: '10px',
                 paddingBottom: '10px',
                 border: '1px solid rgba(29, 49, 91, .3)',
-                borderRadius: '4px'
+                borderRadius: '4px',
+                zIndex: 20
             }
         }
 

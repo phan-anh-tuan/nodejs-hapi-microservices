@@ -159,7 +159,7 @@ function register(id) {
 	sendMessage(message);
 }
 
-function call(peer) {
+function call(peer, audioCall = false) {
 	
 
 	setCallState(PROCESSING_CALL);
@@ -174,6 +174,13 @@ function call(peer) {
             iceServers:
 			[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
         }
+	}
+
+	if (audioCall) {
+		options.mediaConstraints = {
+			audio : true,
+			video : false
+		}
 	}
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
