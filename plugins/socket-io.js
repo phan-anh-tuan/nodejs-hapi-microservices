@@ -204,7 +204,7 @@ exports.register = function (server, options, next) {
                     break;
 
                 case 'call':
-                    call(sessionId, message.to, message.from, message.sdpOffer);
+                    call(sessionId, message.to, message.from, message.sdpOffer, message.audio);
                     break;
 
                 case 'incomingCallResponse':

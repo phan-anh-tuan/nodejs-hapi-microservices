@@ -104,6 +104,7 @@ function incomingCall(message) {
 	setCallState(PROCESSING_CALL);
 	if (confirm('User ' + message.from
 			+ ' is calling you. Do you accept the call?')) {
+		audioCall = message.audio
 		showSpinner(videoInput, videoOutput);
 
 		var options = {
@@ -115,7 +116,12 @@ function incomingCall(message) {
 				[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
 			}
 		}
-
+		if (audioCall) {
+			options.mediaConstraints = {
+				audio : true,
+				video : false
+			}
+		} 
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
 				function(error) {
 					if (error) {
@@ -201,6 +207,7 @@ function call(peer, _audioCall = false) {
 				id : 'call',
 				from : window.username,
 				to : peer,
+				audio: audioCall,
 				sdpOffer : offerSdp
 			};
 			sendMessage(message);
