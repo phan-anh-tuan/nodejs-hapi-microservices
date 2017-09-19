@@ -135,7 +135,9 @@ internals.applyRoutes = function(server,next) {
                                     { url: '/assets/static/kurento-utils.js'},
                                     { url: '/assets/static/adapter.js'},
                                     { url: '/assets/static/videocall.js'},
-                                    { url: '/socket.io/socket.io.js'}]
+                                    { url: '/socket.io/socket.io.js'},
+                                    { url: 'https://cdn.WebRTC-Experiment.com/getScreenId.js'}
+                                ]
                             };
                 reply.view('index',context);
             },

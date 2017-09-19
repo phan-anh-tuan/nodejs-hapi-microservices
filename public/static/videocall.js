@@ -185,14 +185,99 @@ function call(peer, _audioCall = false) {
 	}
 
 	if (audioCall) {
+		
 		options.mediaConstraints = {
 			audio : true,
 			video : false
 		}
+		/******** screen sharing start */
+		/*
+			options.mediaConstraints = {
+				audio : false,
+				video : true
+			}
+			getScreenId(function (error, sourceId, screen_constraints) {
+				// error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
+				// sourceId == null || 'string' || 'firefox'
+			
+				screen_constraints = {
+					audio: false,
+					video: {
+						mandatory: {
+							chromeMediaSource: 'desktop',
+							maxWidth: 1920,
+							maxHeight: 1080,
+							minAspectRatio: 1.77
+						},
+						optional: [{
+							googTemporalLayeredScreencast: true
+						}]
+					}
+				};
+				console.log(`sourceId ${sourceId}`)
+				if(sourceId && sourceId != 'firefox') {
+					screen_constraints = {
+						audio: false,
+						video: {
+							mandatory: {
+								chromeMediaSource: 'desktop',
+								maxWidth: 1920,
+								maxHeight: 1080,
+								minAspectRatio: 1.77
+							},
+							optional: [{
+								googTemporalLayeredScreencast: true
+							}]
+						}
+					};
+			
+					if (error === 'permission-denied') return alert('Permission is denied.');
+					if (error === 'not-chrome') return alert('Please use chrome.');
+			
+					if (!error && sourceId) {
+						screen_constraints.video.mandatory.chromeMediaSource = 'desktop';
+						screen_constraints.video.mandatory.chromeMediaSourceId = sourceId;
+					}
+				}
+			
+				navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+				navigator.getUserMedia(screen_constraints, function (stream) {
+					videoInput.src = URL.createObjectURL(stream); //use screensharing stream instead of stream from local media
+					options.videoStream = stream;
+					webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
+						error) {
+					if (error) {
+						console.error(error);
+						setCallState(NO_CALL);
+					}
+			
+					this.generateOffer(function(error, offerSdp) {
+						if (error) {
+							console.error(error);
+							setCallState(NO_CALL);
+						}
+						var message = {
+							id : 'call',
+							from : window.username,
+							to : peer,
+							//audio: audioCall,  
+							audio: false, //temporarily hardcode it to test screensharing feature
+							sdpOffer : offerSdp
+						};
+						sendMessage(message);
+					});
+				});
+				}, function (error) {
+					console.error('getScreenId error', error);
+					alert('Failed to capture your screen. Please check Chrome console logs for further information.');
+				});
+			});
+		*/
+
+		/******** screen sharing end ***/
 	} 
 
-	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
-			error) {
+	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(error) {
 		if (error) {
 			console.error(error);
 			setCallState(NO_CALL);
@@ -207,13 +292,12 @@ function call(peer, _audioCall = false) {
 				id : 'call',
 				from : window.username,
 				to : peer,
-				audio: audioCall,
+				audio: audioCall,  
 				sdpOffer : offerSdp
 			};
 			sendMessage(message);
 		});
 	});
-
 }
 
 function stop(message) {
