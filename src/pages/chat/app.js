@@ -204,7 +204,15 @@ export default class App extends React.Component {
             });*/
             document.getElementById('terminate').addEventListener('click', function() {
                 stop();
-            });
+            }); 
+
+            //window.onunload = function() {
+            $(window).unload(function(){
+                console.log(`closing the socket`)
+                socket.close();
+            })
+            
+            
         })
 
         //get online contact list
@@ -332,13 +340,29 @@ export default class App extends React.Component {
                     </Col>
                 </Row>
                 <Row className='show-grid'>
-                    <Col sm={12} id='video-panel' style={{position: 'absolute', left: '0px', width: '600px'}}>
-                        <a id="terminate" href="#" class="btn btn-danger">
-                            <span class="glyphicon glyphicon-stop"></span> Stop</a>
-                        <div id="videoBig">
+                    <Col sm={12} id='video-panel'>
+                        <a id="terminate" href="#" className="btn btn-danger">
+                            <span className="glyphicon glyphicon-stop"></span> Stop</a>
+                        <div id="videoBig" style={{
+                                                    width: '640px',
+                                                    height: '480px',
+                                                    top: 0,
+                                                    left: 0,
+                                                    zIndex: 1
+                                                }}>
                             <video id="videoOutput" autoPlay width="640px" height="480px" poster="assets/img/webrtc.png"></video>
                         </div>
-                        <div id="videoSmall">
+                        <div id="videoSmall" style={{
+                                                            width: '240px',
+                                                            height: '180px',
+                                                            padding: '0px',
+                                                            position: 'absolute',
+                                                            top: '15px',
+                                                            left: '400px',
+                                                            cursor: 'pointer',
+                                                            zIndex: 10,
+                                                            padding: '0px',
+                                                        }}>
                             <video id="videoInput" autoPlay width="240px" height="180px" poster="assets/img/webrtc.png"></video>
                         </div>
                     </Col>

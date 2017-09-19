@@ -12,8 +12,8 @@ function setRegisterState(nextState) {
 	switch (nextState) {
 	case NOT_REGISTERED:
 		/*$('#register').attr('disabled', false);
-		$('#call').attr('disabled', true);
-		$('#terminate').attr('disabled', true);*/
+		$('#call').attr('disabled', true);*/
+		$('#terminate').attr('disabled', true);
 		break;
 
 	case REGISTERING:
@@ -40,16 +40,16 @@ function setCallState(nextState) {
 	switch (nextState) {
 	case NO_CALL:
 		//$('#call').attr('disabled', false);
-		//$('#terminate').attr('disabled', true);
+		$('#terminate').attr('disabled', true);
 		break;
 
 	case PROCESSING_CALL:
 		//$('#call').attr('disabled', true);
-		//$('#terminate').attr('disabled', true);
+		$('#terminate').attr('disabled', true);
 		break;
 	case IN_CALL:
 		//$('#call').attr('disabled', true);
-		//$('#terminate').attr('disabled', false);
+		$('#terminate').attr('disabled', false);
 		break;
 	default:
 		return;

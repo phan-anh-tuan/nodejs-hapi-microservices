@@ -187,7 +187,7 @@ exports.register = function (server, options, next) {
             stop(sessionId);
         });
 
-        socket.on('close', function() {
+        socket.on('disconnect', function() {
             console.log('Connection ' + sessionId + ' closed');
             stop(sessionId);
             userRegistry.unregister(sessionId);
