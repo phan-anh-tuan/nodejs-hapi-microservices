@@ -330,7 +330,7 @@ exports.register = function (server, options, next) {
         }
     }
 
-    function call(callerId, to, from, sdpOffer) {
+    function call(callerId, to, from, sdpOffer, isAudio) {
         clearCandidatesQueue(callerId);
 
         var caller = userRegistry.getById(callerId);
@@ -342,7 +342,8 @@ exports.register = function (server, options, next) {
             caller.peer = to;
             var message = {
                 id: 'incomingCall',
-                from: from
+                from: from,
+                audio: isAudio
             };
             try{
                 return callee.sendMessage(message);
