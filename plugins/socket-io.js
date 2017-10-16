@@ -14,8 +14,10 @@ exports.register = function (server, options, next) {
 
     let userRegistry = internals.userRegistry = new UserRegistry();
     let pipelines= internals.pipelines = {};
+    let screenSharingPipelines= internals.screenSharingPipelines = {};
 
     let candidatesQueue = {};
+    let screenSharingCandidatesQueue = {};
     let kurentoClient = null;
     let ws_uri = "ws://localhost:8888/kurento"
 
@@ -204,11 +206,19 @@ exports.register = function (server, options, next) {
                     break;
 
                 case 'call':
-                    call(sessionId, message.to, message.from, message.sdpOffer, message.audio);
+                    call(sessionId, message.to, message.from, message.sdpOffer, message.mode);
+                    break;
+                
+                case 'screenSharing':
+                    screenSharing(sessionId, message.to, message.from, message.sdpOffer, message.mode);
                     break;
 
                 case 'incomingCallResponse':
                     incomingCallResponse(sessionId, message.from, message.callResponse, message.sdpOffer, ws);
+                    break;
+
+                case 'screenSharingResponse':
+                    screenSharingResponse(sessionId, message.from, message.callResponse, message.sdpOffer, ws);
                     break;
 
                 case 'stop':
@@ -218,7 +228,9 @@ exports.register = function (server, options, next) {
                 case 'onIceCandidate':
                     onIceCandidate(sessionId, message.candidate);
                     break;
-
+                case 'onScreenSharingIceCandidate':
+                    onScreenSharingIceCandidate(sessionId, message.candidate);
+                    break;
                 default:
                     ws.emit('webrtc:message',JSON.stringify({
                         id : 'error',
@@ -258,7 +270,7 @@ exports.register = function (server, options, next) {
     }
 
     function incomingCallResponse(calleeId, from, callResponse, calleeSdp, ws) {
-        var pipeline;
+        let pipeline;
         clearCandidatesQueue(calleeId);
 
         function onError(callerReason, calleeReason) {
@@ -330,7 +342,76 @@ exports.register = function (server, options, next) {
         }
     }
 
-    function call(callerId, to, from, sdpOffer, isAudio) {
+    function screenSharingResponse(calleeId, from, callResponse, calleeSdp, ws) {
+        let pipeline;
+        clearScreenSharingCandidatesQueue(calleeId)
+
+        function onError(callerReason, calleeReason) {
+            if (pipeline) pipeline.release();
+            if (caller) {
+                var callerMessage = {
+                    id: 'screenSharingResponse',
+                    response: 'rejected'
+                }
+                if (callerReason) callerMessage.message = callerReason;
+                caller.sendMessage(callerMessage);
+            }
+
+            var calleeMessage = {
+                id: 'stopScreenSharing'
+            };
+            if (calleeReason) calleeMessage.message = calleeReason;
+            callee.sendMessage(calleeMessage);
+        }
+
+        var callee = userRegistry.getById(calleeId);
+        if (!from || !userRegistry.getByName(from)) {
+            return onError(null, 'unknown from = ' + from);
+        }
+        var caller = userRegistry.getByName(from);
+
+        if (callResponse === 'accept') {
+            pipeline = new CallMediaPipeline();
+            screenSharingPipelines[caller.id] = pipeline;
+            screenSharingPipelines[callee.id] = pipeline;
+            //remove remote stream
+            //pipeline.webRtcEndpoint[caller.id]
+            pipeline.createScreenSharingPipeline(caller.id, callee.id, ws, function(error) {
+                if (error) {
+                    console.log(`socket-io.js error creating pipeline ${error}`)
+                    return onError(error, error);
+                }
+                pipeline.generateSdpAnswer(caller.id, caller.screenSharing.sdpOffer, function(error, callerSdpAnswer) {
+                    if (error) {
+                        console.log(`socket-io.js error creating caller SdpAnswer ${error}`)
+                        return onError(error, error);
+                    }
+
+                    pipeline.generateSdpAnswer(callee.id, calleeSdp, function(error, calleeSdpAnswer) {
+                        if (error) {
+                            console.log(`socket-io.js error creating callee SdpAnswer ${error}`)
+                            return onError(error, error);
+                        }
+
+                        var message = {
+                            id: 'startScreenSharing',
+                            sdpAnswer: calleeSdpAnswer
+                        };
+                        callee.sendMessage(message);
+
+                        message = {
+                            id: 'screenSharingResponse',
+                            response : 'accepted',
+                            sdpAnswer: callerSdpAnswer
+                        };
+                        caller.sendMessage(message);
+                    });
+                });
+            })
+        } 
+    }
+ 
+    function call(callerId, to, from, sdpOffer, mode) {
         clearCandidatesQueue(callerId);
 
         var caller = userRegistry.getById(callerId);
@@ -343,7 +424,7 @@ exports.register = function (server, options, next) {
             var message = {
                 id: 'incomingCall',
                 from: from,
-                audio: isAudio
+                mode: mode
             };
             try{
                 return callee.sendMessage(message);
@@ -357,6 +438,30 @@ exports.register = function (server, options, next) {
             message: rejectCause
         };
         caller.sendMessage(message);
+    }
+
+
+    function screenSharing(callerId, to, from, sdpOffer, mode) {
+        clearScreenSharingCandidatesQueue(callerId);
+
+        var caller = userRegistry.getById(callerId);
+        var rejectCause = 'User ' + to + ' is not registered';
+        if (userRegistry.getByName(to)) {
+            var callee = userRegistry.getByName(to);
+            caller.screenSharing.sdpOffer = sdpOffer
+            //callee.peer = from;
+            //caller.peer = to;
+            var message = {
+                id: 'screenSharing',
+                from: from,
+                mode: mode
+            };
+            try{
+                return callee.sendMessage(message);
+            } catch(exception) {
+                rejectCause = "Error " + exception;
+            }
+        }
     }
 
     function register(id, name, ws, callback) {
@@ -386,6 +491,12 @@ exports.register = function (server, options, next) {
         }
     }
 
+    function clearScreenSharingCandidatesQueue(sessionId) {
+        if (screenSharingCandidatesQueue[sessionId]) {
+            delete screenSharingCandidatesQueue[sessionId];
+        }
+    }
+
     function onIceCandidate(sessionId, _candidate) {
         var candidate = kurento.getComplexType('IceCandidate')(_candidate);
         var user = userRegistry.getById(sessionId);
@@ -393,7 +504,7 @@ exports.register = function (server, options, next) {
         if (pipelines[user.id] && pipelines[user.id].webRtcEndpoint && pipelines[user.id].webRtcEndpoint[user.id]) {
             var webRtcEndpoint = pipelines[user.id].webRtcEndpoint[user.id];
             webRtcEndpoint.addIceCandidate(candidate);
-        }
+        } 
         else {
             if (!candidatesQueue[user.id]) {
                 candidatesQueue[user.id] = [];
@@ -402,7 +513,21 @@ exports.register = function (server, options, next) {
         }
     }
 
+    function onScreenSharingIceCandidate(sessionId, _candidate) {
+        let candidate = kurento.getComplexType('IceCandidate')(_candidate);
+        let user = userRegistry.getById(sessionId);
 
+        if (screenSharingPipelines[user.id] && screenSharingPipelines[user.id].webRtcEndpoint && screenSharingPipelines[user.id].webRtcEndpoint[user.id]) {
+            let webRtcEndpoint = screenSharingPipelines[user.id].webRtcEndpoint[user.id];
+            webRtcEndpoint.addIceCandidate(candidate);
+        }
+        else {
+            if (!screenSharingCandidatesQueue[user.id]) {
+                screenSharingCandidatesQueue[user.id] = [];
+            }
+            screenSharingCandidatesQueue[sessionId].push(candidate);
+        }
+    }
 
 
 
@@ -507,6 +632,83 @@ exports.register = function (server, options, next) {
         })
     }
 
+    CallMediaPipeline.prototype.createScreenSharingPipeline = function(callerId, calleeId, ws, callback) {
+        var self = this;
+        getKurentoClient(function(error, kurentoClient) {
+            if (error) {
+                return callback(error);
+            }
+
+            kurentoClient.create('MediaPipeline', function(error, pipeline) {
+                if (error) {
+                    return callback(error);
+                }
+
+                pipeline.create('WebRtcEndpoint', function(error, callerWebRtcEndpoint) {
+                    if (error) {
+                        pipeline.release();
+                        return callback(error);
+                    }
+
+                    if (screenSharingCandidatesQueue[callerId]) {
+                        while(screenSharingCandidatesQueue[callerId].length) {
+                            var candidate = screenSharingCandidatesQueue[callerId].shift();
+                            callerWebRtcEndpoint.addIceCandidate(candidate);
+                        }
+                    }
+
+                    callerWebRtcEndpoint.on('OnIceCandidate', function(event) {
+                        var candidate = kurento.getComplexType('IceCandidate')(event.candidate);
+                        userRegistry.getById(callerId).ws.emit('webrtc:message',JSON.stringify({
+                            id : 'screenSharingIceCandidate',
+                            candidate : candidate
+                        }));
+                    });
+
+                    pipeline.create('WebRtcEndpoint', function(error, calleeWebRtcEndpoint) {
+                        if (error) {
+                            pipeline.release();
+                            return callback(error);
+                        }
+
+                        if (screenSharingCandidatesQueue[calleeId]) {
+                            while(screenSharingCandidatesQueue[calleeId].length) {
+                                var candidate = screenSharingCandidatesQueue[calleeId].shift();
+                                calleeWebRtcEndpoint.addIceCandidate(candidate);
+                            }
+                        }
+
+                        calleeWebRtcEndpoint.on('OnIceCandidate', function(event) {
+                            var candidate = kurento.getComplexType('IceCandidate')(event.candidate);
+                            userRegistry.getById(calleeId).ws.emit('webrtc:message',JSON.stringify({
+                                id : 'screenSharingIceCandidate',
+                                candidate : candidate
+                            }));
+                        });
+
+                        callerWebRtcEndpoint.connect(calleeWebRtcEndpoint, function(error) {
+                            if (error) {
+                                pipeline.release();
+                                return callback(error);
+                            }
+
+                            calleeWebRtcEndpoint.connect(callerWebRtcEndpoint, function(error) {
+                                if (error) {
+                                    pipeline.release();
+                                    return callback(error);
+                                }
+                            });
+
+                            self.pipeline = pipeline;
+                            self.webRtcEndpoint[callerId] = callerWebRtcEndpoint;
+                            self.webRtcEndpoint[calleeId] = calleeWebRtcEndpoint;
+                            callback(null);
+                        });
+                    });
+                });
+            });
+        })
+    }
     CallMediaPipeline.prototype.generateSdpAnswer = function(id, sdpOffer, callback) {
         this.webRtcEndpoint[id].processOffer(sdpOffer, callback);
         this.webRtcEndpoint[id].gatherCandidates(function(error) {

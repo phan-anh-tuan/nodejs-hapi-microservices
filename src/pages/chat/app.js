@@ -169,18 +169,33 @@ export default class App extends React.Component {
                     case 'callResponse':
                         callResponse(parsedMessage);
                         break;
+                    case 'screenSharingResponse':
+                        screenSharingResponse(parsedMessage);
+                        break;
                     case 'incomingCall':
                         incomingCall(parsedMessage);
                         break;
+                    case 'screenSharing':
+                        screenSharing(parsedMessage);
+                        break;
                     case 'startCommunication':
                         startCommunication(parsedMessage);
+                        break;
+                    case 'startScreenSharing':
+                        startScreenSharing(parsedMessage);
                         break;
                     case 'stopCommunication':
                         console.info("Communication ended by remote peer");
                         stop(true);
                         break;
+                    case 'stopScreenSharing':
+                        console.info("Screen sharing ended by remote peer");
+                        stopScreenSharing(true);
+                        break;
                     case 'iceCandidate':
                         webRtcPeer.addIceCandidate(parsedMessage.candidate)
+                    case 'screenSharingIceCandidate':
+                        webRtcScreenSharingPeer.addIceCandidate(parsedMessage.candidate)
                         break;
                     default:
                         console.error('Unrecognized message', parsedMessage);
@@ -193,19 +208,14 @@ export default class App extends React.Component {
             //var drag = new Draggabilly(document.getElementById('videoSmall'));
             videoInput = document.getElementById('videoInput');
             videoOutput = document.getElementById('videoOutput');
-            //document.getElementById('name').focus();
-
-            /*document.getElementById('register').addEventListener('click', function() {
-                register();
-            });*/
-            /*        
-            document.getElementById('call').addEventListener('click', function() {
-                //call();
-            });*/
+            videoScreenSharingInput= document.getElementById('screenSharingInput');
             document.getElementById('terminate').addEventListener('click', function() {
                 stop();
             }); 
-
+          
+            document.getElementById('stopScreenSharing').addEventListener('click', function() {
+                stopScreenSharing();
+            }); 
             //window.onunload = function() {
             $(window).unload(function(){
                 console.log(`closing the socket`)
@@ -342,7 +352,11 @@ export default class App extends React.Component {
                 <Row className='show-grid'>
                     <Col sm={12} id='video-panel'>
                         <a id="terminate" href="#" className="btn btn-danger">
-                            <span className="glyphicon glyphicon-stop"></span> Stop</a>
+                            <span className="glyphicon glyphicon-stop"></span> Stop</a>{" "}
+                        <a id="screenSharing" href="#" className="btn btn-primary" disabled="disabled">
+                            <img style={{ width:"40px", height:"20px" }} src="/assets/img/screensharing.png"/></a>{" "}
+                        <a id="stopScreenSharing" href="#" className="btn btn-danger" disabled="disabled">
+                            <img style={{ width:"40px", height:"20px" }} src="/assets/img/stopscreensharing.png"/></a>
                         <div id="videoBig" style={{
                                                     width: '640px',
                                                     height: '480px',
@@ -352,6 +366,7 @@ export default class App extends React.Component {
                                                 }}>
                             <video id="videoOutput" autoPlay width="640px" height="480px" poster="assets/img/webrtc.png"></video>
                         </div>
+                        <video id="screenSharingInput" autoPlay width="1px" height="1px"/>
                         <div id="videoSmall" style={{
                                                             width: '240px',
                                                             height: '180px',

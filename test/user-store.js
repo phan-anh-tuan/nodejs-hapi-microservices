@@ -1,10 +1,12 @@
 'use strict';
-const Code = require('code');
-const Lab = require('lab');
+
 const Server = require('../lib/index.js');
 const UserStore = require('../plugins/user-store.js');
 
-/*const lab = exports.lab = Lab.script();
+/*
+const Code = require('code');
+const Lab = require('lab');
+const lab = exports.lab = Lab.script();
 const it = lab.test;
 const describe = lab.experiment;
 const beforeEach = lab.beforeEach;

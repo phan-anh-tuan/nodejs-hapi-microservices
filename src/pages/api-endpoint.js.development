@@ -1,1 +1,1 @@
-export const ApiEndpoint = 'http://localhost:3000/api'
+export const ApiEndpoint = 'https://192.168.1.8:3000/api'

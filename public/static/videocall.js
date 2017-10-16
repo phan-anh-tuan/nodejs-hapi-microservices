@@ -1,6 +1,8 @@
 var videoInput;
 var videoOutput;
+var videoScreenSharingInput;
 var webRtcPeer;
+var webRtcScreenSharingPeer;
 
 var registerName = null;
 const NOT_REGISTERED = 0;
@@ -34,15 +36,17 @@ function setRegisterState(nextState) {
 const NO_CALL = 0;
 const PROCESSING_CALL = 1;
 const IN_CALL = 2;
-var audioCall = false;
+
+var callMode = '';
 var callState = null
+
 
 function setCallState(nextState) {
 	switch (nextState) {
 	case NO_CALL:
 		//$('#call').attr('disabled', false);
 		$('#terminate').attr('disabled', true);
-		audioCall = false
+		callMode = '';
 		break;
 
 	case PROCESSING_CALL:
@@ -72,6 +76,7 @@ function resgisterResponse(message) {
 }
 
 function callResponse(message) {
+	
 	if (message.response != 'accepted') {
 		console.info('Call not accepted by peer. Closing call');
 		var errorMessage = message.message ? message.message : 'Unknown reason for call rejection.';
@@ -81,6 +86,21 @@ function callResponse(message) {
 		setCallState(IN_CALL);
 		webRtcPeer.processAnswer(message.sdpAnswer);
 	}
+	
+}
+
+function screenSharingResponse(message) {
+	
+	if (message.response != 'accepted') {
+		console.info('Screen sharing not accepted by peer. Closing call');
+		var errorMessage = message.message ? message.message : 'Unknown reason for call rejection.';
+		console.log(errorMessage);
+		stopScreenSharing(true);
+	} else {
+		//setCallState(IN_CALL);
+		webRtcScreenSharingPeer.processAnswer(message.sdpAnswer);
+	}
+	
 }
 
 function startCommunication(message) {
@@ -88,14 +108,19 @@ function startCommunication(message) {
 	webRtcPeer.processAnswer(message.sdpAnswer);
 }
 
+function startScreenSharing(message) {
+	webRtcScreenSharingPeer.processAnswer(message.sdpAnswer);
+}
+
 function incomingCall(message) {
 	// If bussy just reject without disturbing user
+	
 	if (callState != NO_CALL) {
 		var response = {
 			id : 'incomingCallResponse',
 			from : message.from,
 			callResponse : 'reject',
-			message : 'bussy'
+			message : 'busy'
 
 		};
 		return sendMessage(response);
@@ -104,24 +129,24 @@ function incomingCall(message) {
 	setCallState(PROCESSING_CALL);
 	if (confirm('User ' + message.from
 			+ ' is calling you. Do you accept the call?')) {
-		audioCall = message.audio
-		showSpinner(videoInput, videoOutput);
-
+		
 		var options = {
 			localVideo : videoInput,
 			remoteVideo : videoOutput,
+			mediaConstraints: generateMediaConstraints(message.mode),
 			onicecandidate : onIceCandidate,
 			configuration: {
 				iceServers:
 				[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
 			}
 		}
-		if (audioCall) {
-			options.mediaConstraints = {
-				audio : true,
-				video : false
-			}
-		} 
+		
+		let videoAudioOnlyOutput = videoScreenSharingInput
+		if (message.mode === 'audio') options.remoteVideo = videoAudioOnlyOutput; //reserve the videoOutput for screenSharing remote stream
+
+		console.log(`videocall.js incomingCall ${JSON.stringify(options.mediaConstraints)}`)
+		showSpinner(videoInput, videoOutput);
+
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
 				function(error) {
 					if (error) {
@@ -156,6 +181,50 @@ function incomingCall(message) {
 	}
 }
 
+
+function screenSharing(message) {
+	//setCallState(PROCESSING_CALL);
+	
+	//showSpinner(videoInput, videoOutput);
+
+
+	var options = {
+		//localVideo : videoInput,
+		remoteVideo : videoOutput,
+		//mediaConstraints: generateMediaConstraints(message.mode),
+		onicecandidate : onScreenSharingIceCandidate,
+		configuration: {
+			iceServers:
+			[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
+		}
+	}
+	console.log(`videocall.js incomingCall ${JSON.stringify(options.mediaConstraints)}`)
+	//showSpinner(videoInput, videoOutput);
+	
+	if (webRtcScreenSharingPeer) webRtcScreenSharingPeer.dispose();
+	webRtcScreenSharingPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options,
+		function(error) {
+			if (error) {
+				console.error(error);
+				//setCallState(NO_CALL);
+			}
+
+			this.generateOffer(function(error, offerSdp) {
+				if (error) {
+					console.error(error);
+					//setCallState(NO_CALL);
+				}
+				var response = {
+					id : 'screenSharingResponse',
+					from : message.from,
+					callResponse : 'accept',
+					sdpOffer : offerSdp
+				};
+				sendMessage(response);
+			});
+		});
+}
+
 function register(id) {
 
 	setRegisterState(REGISTERING);
@@ -167,115 +236,52 @@ function register(id) {
 	sendMessage(message);
 }
 
-function call(peer, _audioCall = false) {
-	audioCall = _audioCall;
+function generateMediaConstraints(mode) {
+	let constraints = {}
+	callMode = mode
+	switch(callMode) {
+		case 'audio':
+			constraints = {
+				audio : true,
+				video : false
+			}
+			break;
+		case 'video' :
+			constraints = {
+				audio : true,
+				video : true
+			}
+			break;
+		case 'screen sharing' :
+			constraints = {
+				audio : false,
+				video : true
+			}
+			break;
+		default:
+			constraints = {
+				audio : true,
+				video : true
+			}
+	}
+	return constraints
+}
 
-	setCallState(PROCESSING_CALL);
-
-	showSpinner(videoInput, videoOutput);
+function call(peer, mode = 'video') {
 
 	var options = {
 		localVideo : videoInput,
 		remoteVideo : videoOutput,
 		onicecandidate : onIceCandidate,
+		mediaConstraints: generateMediaConstraints(mode),
         configuration: {
             iceServers:
 			[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
         }
 	}
-
-	if (audioCall) {
-		
-		options.mediaConstraints = {
-			audio : true,
-			video : false
-		}
-		/******** screen sharing start */
-		/*
-			options.mediaConstraints = {
-				audio : false,
-				video : true
-			}
-			getScreenId(function (error, sourceId, screen_constraints) {
-				// error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
-				// sourceId == null || 'string' || 'firefox'
-			
-				screen_constraints = {
-					audio: false,
-					video: {
-						mandatory: {
-							chromeMediaSource: 'desktop',
-							maxWidth: 1920,
-							maxHeight: 1080,
-							minAspectRatio: 1.77
-						},
-						optional: [{
-							googTemporalLayeredScreencast: true
-						}]
-					}
-				};
-				console.log(`sourceId ${sourceId}`)
-				if(sourceId && sourceId != 'firefox') {
-					screen_constraints = {
-						audio: false,
-						video: {
-							mandatory: {
-								chromeMediaSource: 'desktop',
-								maxWidth: 1920,
-								maxHeight: 1080,
-								minAspectRatio: 1.77
-							},
-							optional: [{
-								googTemporalLayeredScreencast: true
-							}]
-						}
-					};
-			
-					if (error === 'permission-denied') return alert('Permission is denied.');
-					if (error === 'not-chrome') return alert('Please use chrome.');
-			
-					if (!error && sourceId) {
-						screen_constraints.video.mandatory.chromeMediaSource = 'desktop';
-						screen_constraints.video.mandatory.chromeMediaSourceId = sourceId;
-					}
-				}
-			
-				navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
-				navigator.getUserMedia(screen_constraints, function (stream) {
-					videoInput.src = URL.createObjectURL(stream); //use screensharing stream instead of stream from local media
-					options.videoStream = stream;
-					webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
-						error) {
-					if (error) {
-						console.error(error);
-						setCallState(NO_CALL);
-					}
-			
-					this.generateOffer(function(error, offerSdp) {
-						if (error) {
-							console.error(error);
-							setCallState(NO_CALL);
-						}
-						var message = {
-							id : 'call',
-							from : window.username,
-							to : peer,
-							//audio: audioCall,  
-							audio: false, //temporarily hardcode it to test screensharing feature
-							sdpOffer : offerSdp
-						};
-						sendMessage(message);
-					});
-				});
-				}, function (error) {
-					console.error('getScreenId error', error);
-					alert('Failed to capture your screen. Please check Chrome console logs for further information.');
-				});
-			});
-		*/
-
-		/******** screen sharing end ***/
-	} 
+	
+	setCallState(PROCESSING_CALL);
+	showSpinner(videoInput, videoOutput);
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(error) {
 		if (error) {
@@ -292,7 +298,8 @@ function call(peer, _audioCall = false) {
 				id : 'call',
 				from : window.username,
 				to : peer,
-				audio: audioCall,  
+				mode: mode, 
+				//mode: 'video only', 
 				sdpOffer : offerSdp
 			};
 			sendMessage(message);
@@ -313,7 +320,24 @@ function stop(message) {
 			sendMessage(message);
 		}
 	}
+	stopScreenSharing()
 	hideSpinner(videoInput, videoOutput);
+}
+
+function stopScreenSharing(message) {
+	//setCallState(NO_CALL);
+	if (webRtcScreenSharingPeer) {
+		webRtcScreenSharingPeer.dispose();
+		webRtcScreenSharingPeer = null;
+
+		if (!message) {
+			var message = {
+				id : 'stopScreenSharing'
+			}
+			sendMessage(message);
+		}
+	}
+	//hideSpinner(videoInput, videoOutput);
 }
 
 function sendMessage(message) {
@@ -324,6 +348,7 @@ function sendMessage(message) {
 }
 
 function onIceCandidate(candidate) {
+	
 	console.log('Local candidate' + JSON.stringify(candidate));
 
 	var message = {
@@ -333,8 +358,19 @@ function onIceCandidate(candidate) {
 	sendMessage(message);
 }
 
+function onScreenSharingIceCandidate(candidate) {
+	
+	console.log('Local candidate' + JSON.stringify(candidate));
+
+	var message = {
+		id : 'onScreenSharingIceCandidate',
+		candidate : candidate,
+	}
+	sendMessage(message);
+}
+
 function showSpinner() {
-	if (!audioCall) {
+	if (callMode !== 'audio') {
 		for (var i = 0; i < arguments.length; i++) {
 			arguments[i].poster = 'assets/img/transparent-1px.png';
 			arguments[i].style.background = 'center transparent url("assets/img/spinner.gif") no-repeat';
@@ -343,7 +379,7 @@ function showSpinner() {
 }
 
 function hideSpinner() {
-	if (!audioCall) {
+	if (callMode !== 'audio') {
 		for (var i = 0; i < arguments.length; i++) {
 			arguments[i].src = '';
 			arguments[i].poster = 'assets/img/webrtc.png';
@@ -352,3 +388,92 @@ function hideSpinner() {
 	}
 }
 
+function startScreenSharing(recipient) {
+	
+
+	if (webRtcScreenSharingPeer) webRtcScreenSharingPeer.dispose();
+
+	//const peer = webRtcPeer.peerConnection
+	/******** screen sharing start */
+	/*peer.getLocalStreams().forEach(function(stream) {
+		peer.removeStream(stream);
+	});*/	
+	getScreenId(function (error, sourceId, screen_constraints) {
+		// error    == null || 'permission-denied' || 'not-installed' || 'installed-disabled' || 'not-chrome'
+		// sourceId == null || 'string' || 'firefox'
+	
+		console.log(`videocall.js sourceId ${sourceId}`)
+		if(sourceId && sourceId !== 'firefox') {
+			screen_constraints = {
+				audio: false,
+				video: {
+					mandatory: {
+						chromeMediaSource: 'screen',
+						maxWidth: 1920,
+						maxHeight: 1080,
+						minAspectRatio: 1.77
+					},
+					optional: [{
+						googTemporalLayeredScreencast: true
+					}]
+				}
+			};
+	
+			if (error === 'permission-denied') return alert('Permission is denied.');
+			if (error === 'not-chrome') return alert('Please use chrome.');
+	
+			if (!error && sourceId) {
+				screen_constraints.video.mandatory.chromeMediaSource = 'desktop';
+				screen_constraints.video.mandatory.chromeMediaSourceId = sourceId;
+			}
+		}
+	
+		navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+		navigator.getUserMedia(screen_constraints, function (stream) {
+			videoInput.src = URL.createObjectURL(stream); //use screensharing stream instead of stream from local media
+			//peer.addStream(stream);
+			
+			var options = {
+				localVideo : videoScreenSharingInput,
+				//remoteVideo : videoOutput,
+				onicecandidate : onScreenSharingIceCandidate,
+				mediaConstraints: generateMediaConstraints('screen sharing'),
+				configuration: {
+					iceServers:
+					[{url:'stun:74.125.200.127:19302'}, {url:'turn:66.228.45.110',credential: 'muazkh', username: 'webrtc@live.com'}]
+				}
+			}
+			options.videoStream = stream;
+			//setCallState(PROCESSING_CALL);
+			//showSpinner(videoInput, videoOutput);
+		
+			webRtcScreenSharingPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function(error) {
+				if (error) {
+					console.error(error);
+					//setCallState(NO_CALL);
+				}
+		
+				this.generateOffer(function(error, offerSdp) {
+					if (error) {
+						console.error(error);
+						//setCallState(NO_CALL);
+					}
+					var message = {
+						id : 'screenSharing',
+						from : window.username,
+						to : recipient,
+						mode: 'screen sharing',
+						sdpOffer : offerSdp
+					};
+					sendMessage(message);
+				});
+			});
+			
+
+		}, function (error) {
+			console.error('getScreenId error', error);
+			alert('Failed to capture your screen. Please check Chrome console logs for further information.');
+		});
+	});
+	/******** screen sharing end ***/
+}

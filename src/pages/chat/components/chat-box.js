@@ -36,10 +36,13 @@ export default class ChatBox extends React.Component {
             $(fileChooserSelector).trigger("click");
         });
         $(videoCallImageSelector).on("click", function() {
-            call(recipientName)
+            call(recipientName, 'video')
         });
         $(audioCallImageSelector).on("click", function() {
-            call(recipientName, true)
+            call(recipientName, 'audio')
+            $('screenSharing').on('click', function() {
+                startScreenSharing(recipientName);
+            }); 
         });
         if(window.File && window.FileReader){ //These are the relevant HTML5 objects that we are going to use 
             $(fileChooserSelector).on('change', function(evnt){

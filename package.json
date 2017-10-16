@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node_modules/lab/bin/lab ./test --verbose --coverage",
-    "mocha": "node_modules/mocha/bin/mocha ./test",
+    "mocha": "node_modules/mocha/bin/mocha ./test --exit",
     "devstart": "npm run build && nodemon index.js",
     "prebuild": "del-cli ./public/js -f",
     "build": "webpack"
@@ -93,9 +93,7 @@
     "babel-preset-stage-2": "^6.24.1",
     "chai": "^4.1.2",
     "chai-http": "^3.0.0",
-    "code": "^4.1.0",
     "del-cli": "^1.1.0",
-    "lab": "^13.1.0",
     "mocha": "^4.0.1",
     "webpack": "^3.1.0"
   }
