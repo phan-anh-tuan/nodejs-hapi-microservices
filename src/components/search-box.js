@@ -1,5 +1,6 @@
 import React from 'react'
 import { Col } from 'react-bootstrap'
+import '../../public/css/search-box.css'
 class SearchBox extends React.Component {
     
     buttonUp(){

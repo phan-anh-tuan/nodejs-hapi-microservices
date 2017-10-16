@@ -7,6 +7,7 @@ import NavigationBar from '../../components/navigation-bar.js'
 import SearchBox from '../../components/search-box.js'
 import ChatSidebar from './components/chat-sidebar'
 import ChatBox from './components/chat-box'
+import '../../../public/css/chat.css'
 
 const mql = window.matchMedia(`(min-width: 800px)`);
 export default class App extends React.Component {

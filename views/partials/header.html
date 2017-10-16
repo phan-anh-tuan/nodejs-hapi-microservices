@@ -18,91 +18,17 @@
     </nav>
     -->
 <style>
-    .searchbox-container{
-        width:600px;
-     }
-
-    .searchbox{
-        position:relative;
-        min-width:50px;
-        width:0%;
-        height:50px;
-        float:right;
-        overflow:hidden;
-        margin-bottom: 0;
-        
-        -webkit-transition: width 0.3s;
-        -moz-transition: width 0.3s;
-        -ms-transition: width 0.3s;
-        -o-transition: width 0.3s;
-        transition: width 0.3s;
-    }
-
-    .searchbox-input{
-        top:0;
-        right:0;
-        border:0;
-        outline:0;
-        background:#fcf8e3;
-        border-color:#faebcc;
-        width:100%;
-        height:50px;
-        margin:0;
-        padding:0px 55px 0px 20px;
-        font-size:14px;
-        color:#8a6d3b;
-    }
-    .searchbox-input::-webkit-input-placeholder {
-        color: #8a6d3b;
-    }
-    .searchbox-input:-moz-placeholder {
-        color: #8a6d3b;
-    }
-    .searchbox-input::-moz-placeholder {
-        color: #8a6d3b;
-    }
-    .searchbox-input:-ms-input-placeholder {
-        color: #8a6d3b;
-    }
-
-    .searchbox-icon,
-    .searchbox-submit{
-        width:50px;
-        height:50px;
-        display:block;
-        position:absolute;
-        top:0;
-        right:0;
-        padding:0;
-        margin:0;
-        border:0;
-        outline:0;
-        line-height:50px;
-        text-align:center;
-        cursor:pointer;
-        color:#dcddd8;
-        background:#172b3c;
-    }
-    .searchbox-submit{
-        font-size:22px;
-        font-family:verdana;
-    }
-
-
-    .searchbox-open{
-        width:100%;
-    }
-
+  
     .byline{
-    position:absolute;
-    top:150px;
-    left:30%;
-    text-align:center;
-    font-size:18px;
+        position:absolute;
+        top:150px;
+        left:30%;
+        text-align:center;
+        font-size:18px;
     }
     .byline a{
-    text-decoration:none;
-    color: #d74b4b;
+        text-decoration:none;
+        color: #d74b4b;
     }
 
     svg svg {
@@ -120,59 +46,6 @@
     }
 
 
-    /**** chat sidebar *****/
-    .sidebar-name:hover
-    {
-        background-color:rgb(248,248,248);
-    }
-
-    
-    .popup-box
-    {
-        /*display: none;*/
-        position: fixed;
-        bottom: 0px;
-        right: 220px;
-        height: 325px;
-        background-color: rgb(237, 239, 244);
-        width: 300px;
-        border: 1px solid rgba(29, 49, 91, .3);
-    }
-    
-    .popup-box .popup-head
-    {
-        background-color: #6d84b4;
-        padding: 5px;
-        color: white;
-        font-weight: bold;
-        font-size: 14px;
-        clear: both;
-    }
-    
-    .popup-box .popup-head .popup-head-left
-    {
-        float: left;
-    }
-    
-    .popup-box .popup-head .popup-head-right
-    {
-        float: right;
-        opacity: 0.5;
-    }
-    
-    .popup-box .popup-head .popup-head-right a
-    {
-        text-decoration: none;
-        color: inherit;
-    }
-    
-    .popup-box .popup-messages
-    {
-        overflow-y: scroll;
-        height: 80%;
-        background: rgb(255,255,255)
-    }    
-    /**** end of chat sidebar *****/
     /**** pesan chat ***/
     .chat_box {
         background: #fff;
