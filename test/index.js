@@ -9,16 +9,6 @@ let agent;
 
 chai.use(chaiHttp);
 
-const AccountName = 'Mocha'
-const ResourceType = 'Javascript based unit test developer'
-const ResourceRate = 1000
-const Quantity = 1
-const SubmissionDate = '2017-10-15'
-const TentativeStartDate = '2017-10-15'
-const FulfilmentDate = '2017-10-30'
-const Status = 'Open'
-const COMMENT = 'This is a comment'
-
 before('Initiate Server and Authenticate user',function(done) {
     // runs before all tests in this suite
     Server((err, _server) => {
@@ -52,6 +42,16 @@ after('Stop server and release resources',function(done) {
 });
 
 describe('******** Test Suite - Resource Requests *******', function() {
+    const AccountName = 'Mocha'
+    const ResourceType = 'Javascript based unit test developer'
+    const ResourceRate = 1000
+    const Quantity = 1
+    const SubmissionDate = '2017-10-15'
+    const TentativeStartDate = '2017-10-15'
+    const FulfilmentDate = '2017-10-30'
+    const Status = 'Open'
+    const COMMENT = 'This is a comment'
+
     let resource_request_id;
     beforeEach('should add a SINGLE resource request  on /api/resource/request POST',function(done) {
         agent.post('/api/resource/request')

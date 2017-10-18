@@ -103,7 +103,7 @@ internals.applyRoutes = function(server,next) {
             }
     })
 
-     server.route({
+    server.route({
             method: 'POST',
             path: '/user/{id}',
             config: {
@@ -190,6 +190,34 @@ internals.applyRoutes = function(server,next) {
                     reply(user);
                 })
             }
+    })
+
+
+    server.route({
+        method: 'DELETE',
+        path: '/user/{id}',
+        config: {
+            validate: {
+                params: {
+                    id: Joi.string().invalid('000000000000000000000000')
+                }
+            },
+            description: 'Delete a user' ,
+            tags: ['api']
+        },
+        handler: function(request, reply) {
+            const id = request.params.id
+            
+            User.findByIdAndDelete(id,(err,user) => {
+                if (err) {
+                    reply(err);
+                }
+                if (!user) {
+                    return reply(Boom.notFound('Document not found.'));
+                }
+                reply(user);
+            })
+        }
     })
     /*
     server.route({

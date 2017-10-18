@@ -1,9 +1,45 @@
 'use strict';
+/*
+describe('******** Test Suite - User Management *******', function() {
+    const NAME = 'first last';
+    const EMAIL = 'email@gmail.com';
+    const USER_NAME = 'user_name';
+    const PASSWORD = 'p@ssword'
+    let user_id;
+    beforeEach('should create a user', (done) => {
+        agent.post('/api/signup')
+        .type('form')
+        .send({
+          'name': NAME,
+          'email': EMAIL,
+          'username': USER_NAME,
+          'password': PASSWORD
+        })
+        .then(function(res){
+            expect(res).to.have.status(200);
+            console.log(JSON.stringify(res))
+            const responseText = JSON.parse(res.text)
+            
+            //expect(resource_request_id).to.be.an('string');
+            done();
+        })
+        .catch(function(error) {
+            done(error)
+        })
+    });
+    it('should update an existing user', (done) => {
+        
+    });
+    after('should delete an existing user', () => {
+        
+    });
+});
+*/
+/*
 
 const Server = require('../lib/index.js');
 const UserStore = require('../plugins/user-store.js');
 
-/*
 const Code = require('code');
 const Lab = require('lab');
 const lab = exports.lab = Lab.script();
