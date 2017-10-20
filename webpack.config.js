@@ -15,6 +15,11 @@ module.exports = {
         path: Path.resolve(__dirname,'public/js'),
         filename: '[name].js'
     },
+    externals: {
+        'cheerio': 'window',
+        'react/lib/ExecutionEnvironment': true,
+        'react/lib/ReactContext': true,
+    },
     module: {
         loaders: [
             {
@@ -22,7 +27,7 @@ module.exports = {
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
-                    presets: ['es2015', 'react']
+                    presets: ['es2015', 'react', 'stage-2', 'airbnb']
                 }
             },
             {   test: /\.css$/, 
