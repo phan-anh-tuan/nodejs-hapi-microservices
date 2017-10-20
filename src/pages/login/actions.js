@@ -1,4 +1,5 @@
-import fetch from 'isomorphic-fetch'
+//import fetch from 'isomorphic-fetch'
+import 'whatwg-fetch'
 var moment = require('moment');
 import {ApiEndpoint} from '../api-endpoint'
 
