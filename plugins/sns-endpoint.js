@@ -7,9 +7,9 @@ var crypto = require("crypto");
 exports.register = function (server, options, next) {
     function getMessageBytesToSign (msg) {
         let bytesToSign;
-        if (msg.type === 'Notification')
+        if (msg.Type === 'Notification')
             bytesToSign = buildNotificationStringToSign(msg);
-        else if (msg.type === 'SubscriptionConfirmation' || msg.type === 'UnsubscribeConfirmation')
+        else if (msg.Type === 'SubscriptionConfirmation' || msg.Type === 'UnsubscribeConfirmation')
             bytesToSign = buildSubscriptionStringToSign(msg);
         console.log(`${bytesToSign}`)
         return bytesToSign;
