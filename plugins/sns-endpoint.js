@@ -34,6 +34,7 @@ exports.register = function (server, options, next) {
                 console.log('******************************************')
                 console.log('*     RECEIVE MESSAGE FROM AWS SNS       *')
                 console.log('******************************************')
+                console.log('MessageId: ', JSON.parse(request.payload).MessageId) //this is necessary to handle message retry which happens if aws sns did not receive acknowledgment within predefined timeout
                 console.log('Subject: ', JSON.parse(request.payload).Subject)
                 console.log('Message: ', JSON.parse(request.payload).Message)
                 //request.payload.Message
