@@ -22,7 +22,10 @@ exports.register = function (server, options, next) {
                     if (response.status >= 400) {
                         throw new Error("Bad response from server");
                     }
-                    return console.log(response.text())
+                    return response.text()
+                })
+                .then(function(text){
+                    console.log(text)
                 })
                 .catch(function(error) {
                     console.log('SNS-ENDPOINT ERROR ', error);
