@@ -106,6 +106,7 @@ exports.register = function (server, options, next) {
                     return response.text()
                 })
                 .then(function(certificate){
+                    console.log(`X509 Certificate ${certificate}`)
                     let verifier = crypto.createVerify("SHA1withRSA");
                     verifier.update(getMessageBytesToSign(message));
                     const isValid = verifier.verify(certificate, message.Signature,'base64');
