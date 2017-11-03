@@ -106,7 +106,7 @@ exports.register = function (server, options, next) {
                     return response.text()
                 })
                 .then(function(certificate){
-                    verifier = crypto.createVerifier("SHA1withRSA");
+                    let verifier = crypto.createVerify("SHA1withRSA");
                     verifier.update(getMessageBytesToSign(message));
                     const isValid = verifier.verify(certificate, message.Signature,'base64');
                     console.log(`******** isValid ${isValid} *******`)
