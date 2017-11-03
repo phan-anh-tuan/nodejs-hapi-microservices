@@ -11,6 +11,7 @@ exports.register = function (server, options, next) {
             bytesToSign = buildNotificationStringToSign(msg);
         else if (msg.type === 'SubscriptionConfirmation' || msg.type === 'UnsubscribeConfirmation')
             bytesToSign = buildSubscriptionStringToSign(msg);
+        console.log(`${bytesToSign}`)
         return bytesToSign;
     }
 
