@@ -2,7 +2,65 @@
 //require('es6-promise').polyfill();
 const Joi = require('joi');
 const fetch = require('isomorphic-fetch')
+var crypto = require("crypto");
+
 exports.register = function (server, options, next) {
+    function getMessageBytesToSign (msg) {
+        let bytesToSign;
+        if (msg.type === 'Notification')
+            bytesToSign = buildNotificationStringToSign(msg);
+        else if (msg.type === 'SubscriptionConfirmation' || msg.type === 'UnsubscribeConfirmation')
+            bytesToSign = buildSubscriptionStringToSign(msg);
+        return bytesToSign;
+    }
+
+    //Build the string to sign for Notification messages.
+    function buildNotificationStringToSign(msg) {
+        let stringToSign;
+
+        //Build the string to sign from the values in the message.
+        //Name and values separated by newline characters
+        //The name value pairs are sorted by name 
+        //in byte sort order.
+        stringToSign = "Message\n";
+        stringToSign += msg.Message + "\n";
+        stringToSign += "MessageId\n";
+        stringToSign += msg.MessageId + "\n";
+        if (msg.Subject) {
+            stringToSign += "Subject\n";
+            stringToSign += msg.Subject + "\n";
+        }
+        stringToSign += "Timestamp\n";
+        stringToSign += msg.Timestamp + "\n";
+        stringToSign += "TopicArn\n";
+        stringToSign += msg.TopicArn + "\n";
+        stringToSign += "Type\n";
+        stringToSign += msg.Type + "\n";
+        return stringToSign;
+    }
+
+    function buildSubscriptionStringToSign(msg) {
+        let stringToSign;
+        //Build the string to sign from the values in the message.
+        //Name and values separated by newline characters
+        //The name value pairs are sorted by name 
+        //in byte sort order.
+        stringToSign = "Message\n";
+        stringToSign += msg.Message + "\n";
+        stringToSign += "MessageId\n";
+        stringToSign += msg.MessageId + "\n";
+        stringToSign += "SubscribeURL\n";
+        stringToSign += msg.SubscribeURL + "\n";
+        stringToSign += "Timestamp\n";
+        stringToSign += msg.Timestamp + "\n";
+        stringToSign += "Token\n";
+        stringToSign += msg.Token + "\n";
+        stringToSign += "TopicArn\n";
+        stringToSign += msg.TopicArn + "\n";
+        stringToSign += "Type\n";
+        stringToSign += msg.Type + "\n";
+        return stringToSign;
+    }
 
     server.route({
         method: 'POST',
@@ -31,13 +89,31 @@ exports.register = function (server, options, next) {
                     console.log('SNS-ENDPOINT ERROR ', error);
                 });
             } else if (request.headers['x-amz-sns-message-type'] === 'Notification') {
+                let message = JSON.parse(request.payload)
+                message.Type = request.headers['x-amz-sns-message-type'];
                 console.log('******************************************')
                 console.log('*     RECEIVE MESSAGE FROM AWS SNS       *')
                 console.log('******************************************')
-                console.log('MessageId: ', JSON.parse(request.payload).MessageId) //this is necessary to handle message retry which happens if aws sns did not receive acknowledgment within predefined timeout
-                console.log('Subject: ', JSON.parse(request.payload).Subject)
-                console.log('Message: ', JSON.parse(request.payload).Message)
-                //request.payload.Message
+                //console.log('MessageId: ', message.MessageId) //this is necessary to handle message retry which happens if aws sns did not receive acknowledgment within predefined timeout
+                //console.log('Subject: ', message.Subject)
+                //console.log('Message: ', message.Message)
+                console.log('Message', JSON.stringify(message))
+                fetch(message.SigningCertURL)
+                .then(function(response) {
+                    if (response.status >= 400) {
+                        throw new Error("Bad response from server");
+                    }
+                    return response.text()
+                })
+                .then(function(certificate){
+                    verifier = crypto.createVerifier("SHA1withRSA");
+                    verifier.update(getMessageBytesToSign(message));
+                    const isValid = verifier.verify(certificate, message.Signature,'base64');
+                    console.log(`******** isValid ${isValid} *******`)
+                })
+                .catch(function(error) {
+                    console.log('SNS-ENDPOINT ERROR ', error);
+                });
             }
             reply('ok');                       
         }
