@@ -29,8 +29,7 @@ exports.register = function (server, options, next) {
         stringToSign += msg.MessageId + "\n";
         if (msg.Subject) {
             stringToSign += "Subject\n";
-            //stringToSign += msg.Subject + "\n";
-            stringToSign += "Wrong" + "\n";
+            stringToSign += msg.Subject + "\n";
         }
         stringToSign += "Timestamp\n";
         stringToSign += msg.Timestamp + "\n";
