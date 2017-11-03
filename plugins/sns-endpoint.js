@@ -14,9 +14,10 @@ exports.register = function (server, options, next) {
         handler: function (request, reply) {
             console.log(JSON.stringify(request.headers))
             console.log(JSON.stringify(request.payload))
+            console.log(JSON.parse(request.payload).SubscribeURL)
             if (request.headers['x-amz-sns-message-type'] === 'SubscriptionConfirmation') {
                 //https://sns.ap-southeast-2.amazonaws.com/?Action=ConfirmSubscription&TopicArn=arn:aws:sns:ap-southeast-2:181630946722:NTRR_HTTPEndpoint_Topic&Token=2336412f37fb687f5d51e6e241d59b69a62a729e3f7a7c8184d3d1d8e4d932c87a7860e2aca02498b7312f3a5a63ed22417bcb6d2ab8a9fef635cce5d68726a7d9bec3b7b113c28374763c50a829d197968851130402e8377a7ba3ad0e3151e3db605068525eea775a1e1cd9a6014dbb7057a47d4f1e290ebeb112f7fb1edfcc
-                fetch(request.payload.SubscribeURL)
+                fetch(JSON.parse(request.payload).SubscribeURL)
                 .then(function(response) {
                     if (response.status >= 400) {
                         throw new Error("Bad response from server");
