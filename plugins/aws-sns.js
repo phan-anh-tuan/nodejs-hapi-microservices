@@ -32,7 +32,9 @@ exports.register = function (server, options, next) {
             const password = 'P@ssword'
             handleSignIn(username, password, loginCallbackFactory({
                 onSuccess: function (data) {
+                    //handleSignOut()
                     //console.log(JSON.stringify(data));
+                    
                     const sns = new AWS.SNS({apiVersion: '2010-03-31', region: 'ap-southeast-2'});
                     var params = {
                         Message: 'You are selected to win our lottery of 1 million',
@@ -44,7 +46,7 @@ exports.register = function (server, options, next) {
                         else     console.log(data);           // successful response
                         handleSignOut()
                       });
-
+                    
                 },
                 onFailure: function(error) {
                     console.log('error', error)
