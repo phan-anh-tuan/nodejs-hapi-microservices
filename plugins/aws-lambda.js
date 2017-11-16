@@ -103,9 +103,9 @@ exports.register = function (server, options, next) {
                             }, next)
                         },
                         function transform(response,next) {
-                            console.log(response)
+                            //console.log(response)
                             gm(response.Body).size({bufferStream: true},function(err, size) {
-                                console.log(err)
+                                //console.log(err)
                                 const scalingFactor = Math.min(MAX_WIDTH / size.width, MAX_HEIGHT / size.height)
                                 const height = scalingFactor * size.height
                                 const width = scalingFactor * size.width
@@ -125,8 +125,22 @@ exports.register = function (server, options, next) {
                                     Key: dstKey,
                                     Body: data,
                                     ContentType: contentType
-                                }, next);
+                                }, function(err, data) {
+                                    const href = this.request.httpRequest.endpoint.href;
+                                    const photoUrl = href + dstBucket + '/' + encodeURIComponent(dstKey);
+                                    //console.log(photoUrl)
+                                    next(null, photoUrl)
+                                });
                         }
+                        ,function publish(photoUrl, next) {
+                            const sns = new AWS.SNS({apiVersion: '2010-03-31', region: 'ap-southeast-2'});
+                            var params = {
+                                Message: `You can access your thumbnail at ${photoUrl}`,
+                                Subject: 'Photo thumbnail is ready',
+                                TopicArn: 'arn:aws:sns:ap-southeast-2:181630946722:NTRR_HTTPEndpoint_Topic'
+                              };
+                              sns.publish(params, next);
+                        } 
                     ],function(err){
                         if (err) {
                             console.error(
