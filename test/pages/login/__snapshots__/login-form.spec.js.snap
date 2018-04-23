@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<LoginForm/> +++capturing Snapshot of Home 1`] = `
+<form
+  className="form-horizontal"
+>
+  <div
+    className="form-group"
+  >
+    <label
+      className="col-sm-2 col-xs-11 col-xs-push-1 control-label"
+      htmlFor="username"
+    >
+      Username:
+    </label>
+    <div
+      className="col-sm-6 col-xs-10 col-xs-push-1"
+    >
+      <input
+        className="form-control"
+        id="username"
+        onChange={[Function]}
+        placeholder="Username"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+  <div
+    className="form-group"
+  >
+    <label
+      className="col-sm-2 col-xs-11 col-xs-push-1 control-label"
+      htmlFor="password"
+    >
+      Password:
+    </label>
+    <div
+      className="col-sm-6 col-xs-10 col-xs-push-1"
+    >
+      <input
+        className="form-control"
+        id="password"
+        onChange={[Function]}
+        placeholder="Password"
+        type="password"
+        value=""
+      />
+    </div>
+  </div>
+  <div
+    className="form-group"
+  >
+    <div
+      className="col-sm-6 col-sm-offset-2 col-xs-11 col-xs-push-1"
+    >
+      <button
+        className="btn btn-primary"
+        disabled={false}
+        onClick={[Function]}
+        type="submit"
+      >
+        Login
+      </button>
+      <a
+        className="btn btn-link"
+        href="/signin/forgot"
+        onClick={[Function]}
+      >
+        Forgot your password?
+      </a>
+    </div>
+  </div>
+</form>
+`;
